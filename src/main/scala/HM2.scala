@@ -83,17 +83,26 @@ class TypeSystem extends AST {
   def analyse(ast: Expr, env: Env, nongen: Set[Var], debug: Boolean): (ExprT, Env) = {
     var newenv = env
     val t = ast match {
-      case BinOp(a, b) =>
-        val (a_typed, _) = analyse(a, env, nongen, debug)
-        val (b_typed, _) = analyse(b, env, nongen, debug)
-        unify(NumT, a_typed)
-        unify(NumT, b_typed)
-        NumT
+      //      case BinOp(a, b) =>
+      //        val (a_typed, _) = analyse(a, env, nongen, debug)
+      //        val (b_typed, _) = analyse(b, env, nongen, debug)
+      //        unify(NumT, a_typed)
+      //        unify(NumT, b_typed)
+      //        NumT
+
+      //    import scala.reflect.runtime.universe._
+      //    import scala.tools.reflect.ToolBox
+      //
+      //    val code = """(x: String) => x.replace("$", "")"""
+      //    val toolbox = runtimeMirror(getClass.getClassLoader).mkToolBox()
+      //    val func = toolbox.eval(toolbox.parse(code)).asInstanceOf[String => String]
+      //    println(func("$10.50")) // prints "10.50"
+      case s: Scala => s.t
       case Sequence(items) =>
         val types = for (it <- items) yield {
-          val (ittype, env2) = analyse(it, newenv, nongen, debug)
+          val (typ, env2) = analyse(it, newenv, nongen, debug)
           newenv = env2
-          ittype
+          typ
         }
         types.last
       case Ident(name) => gettype(name, env, nongen)
@@ -101,12 +110,12 @@ class TypeSystem extends AST {
         val (funtype, _) = analyse(fn, env, nongen, debug)
         val (argtype, _) = analyse(arg, env, nongen, debug)
         val resulttype = newVar
-        unify(FunT(argtype, resulttype), funtype)
+        unify(LambdaT(argtype, resulttype), funtype)
         resulttype
       case Lambda(arg, body) =>
         val argtype = newVar
         val (resulttype, _) = analyse(body, env + (arg.name -> argtype), nongen + argtype, debug)
-        FunT(argtype, resulttype)
+        LambdaT(argtype, resulttype)
       case Assign(id, e) =>
         val (etype, _) = analyse(e, env, nongen, debug)
         newenv += (id.name -> etype)
@@ -123,7 +132,7 @@ class TypeSystem extends AST {
       //        unify(newtype, defntype)
       //        analyse(body, newenv, nongen)
     }
-    if (debug) println(ast + ":\t" +t)
+    if (debug) println(ast + ":\t" + t)
     (t, newenv)
   }
 
@@ -146,7 +155,7 @@ class TypeSystem extends AST {
           else {
             v
           }
-        case FunT(from, to) => FunT(freshrec(from), freshrec(to))
+        case LambdaT(from, to) => LambdaT(freshrec(from), freshrec(to))
         case EmptyT => EmptyT
         case BoolT => BoolT
         case NumT => NumT
@@ -168,9 +177,10 @@ class TypeSystem extends AST {
         a.instance = Some(b)
       }
       case (a, b: Var) => unify(b, a)
-      case (FunT(froma, toa), FunT(fromb, tob)) =>
+      case (LambdaT(froma, toa), LambdaT(fromb, tob)) =>
         unify(froma, fromb)
         unify(toa, tob)
+      case (LambdaT(froma, _), b) => throw new TypeError(b + " cannot be applied (to " + froma + ")")
       case (a, b) if a != b => throw new TypeError("Type mismatch: " + a + "≠" + b)
       case (a, b) =>
     }

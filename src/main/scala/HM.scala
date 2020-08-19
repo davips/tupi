@@ -122,7 +122,7 @@ object HM extends AST {
           case BoolT => BoolT
           case NumT => NumT
           case CharT => CharT
-          case FunT(from, to) => FunT(freshrec(from), freshrec(to))
+          case LambdaT(from, to) => LambdaT(freshrec(from), freshrec(to))
 //          case list: ListT => ListT(freshrec(list.elements_type))
           case x => throw new Exception("Unmatched case: " + x)
           //               case SimpleType(name) => SimpleType(name)
@@ -195,42 +195,26 @@ object HM extends AST {
         case a@Num(n) => NumT
         case Char(s) => CharT
         case Bool(s) => BoolT
-        case Add(a, b) => math_op(a, b, nongen)
-        //        try {
-        //          math_op(a, b, nongen)
-        //        } catch {
-        //          case e: Throwable =>
-        //            if (last_types_with_errors(0) == last_types_with_errors(1) && last_types_with_errors(0) == "'list'") {
-        //              throw new TypeError(e.getMessage + "\nHint: only numbers can be added with '+'. To concatenate strings or lists use '++'.")
-        //            } else {
-        //              throw new TypeError(e.getMessage + "\nHint: only numbers can be added with '+'.")
-        //            }
-        //        }
-        case Sub(a, b) => math_op(a, b, nongen)
-        case Mul(a, b) => math_op(a, b, nongen)
-        case Div(a, b) => math_op(a, b, nongen)
-        case Pow(a, b) => math_op(a, b, nongen)
-        case Rem(a, b) => math_op(a, b, nongen)
         case Sequence(items) =>
           items map (it => analyse(it, nongen))
           items.last.t
         case Assign(id, e) =>
           envi += (id.name -> analyse(e))
           EmptyT
-        case id: AbsIdent =>
+        case id: Ident =>
           id.t = get_type_of_identifier(id.name, nongen);
           id.t
         case Appl(f, arg) =>
           val funtype = analyse(f, nongen)
           val argtype = analyse(arg, nongen)
           val resulttype = newVariable
-          unify(FunT(argtype, resulttype), funtype)
+          unify(LambdaT(argtype, resulttype), funtype)
           resulttype
         case Lambda(arg, body) =>
           val argtype = newVariable
           envi += (arg.name -> argtype)
           val resulttype = analyse(body, nongen + argtype)
-          FunT(argtype, resulttype)
+          LambdaT(argtype, resulttype)
 
         //      case li: List => {
         //        val element_types = li.exprs map (e => analyse(e, nongen))

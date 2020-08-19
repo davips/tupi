@@ -18,17 +18,23 @@ trait Types {
     override def toString = "'character'"
   }
 
-//  case class ListT(elements_type: ExprT) extends ExprT {
-//    override def toString: String = "'list of " + elements_type + "'"
-//  }
+  case object StrT extends ExprT {
+    override def toString = "'str'"
+  }
 
-  case class FunT(from: ExprT, to: ExprT) extends ExprT
+  //  case class ListT(elements_type: ExprT) extends ExprT {
+  //    override def toString: String = "'list of " + elements_type + "'"
+  //  }
+
+  case class LambdaT(from: ExprT, to: ExprT) extends ExprT {
+    override def toString = f"{$from→$to}"
+  }
 
   case class Var(id: Int) extends ExprT {
     var instance: Option[ExprT] = None
     lazy val name: String = HM.nextUniqueName
 
-    override def toString: String = "v" + id
+    override def toString: String = if (instance.isEmpty) ("t" + id) else instance.get.toString
   }
 
 }
