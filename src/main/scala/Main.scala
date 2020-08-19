@@ -98,14 +98,11 @@ object Main extends HM2 with RegexParsers with ImplicitConversions with JavaToke
 
     val m = LMap[Expr]()
 
-    //    def eval(e: Expr) = e match {
-    //      case Assign(x, y) => m.put(x.name, y)
-    //      case Sequence(l) => l.map(eval)
-    //      case Lambda(param, body) => l.map(eval)
-    //      case Add(x, y) => x + y
-    //      case Sub(x, y) => x - y
-    //      case Add(x, y) => x * y
-    //      case Add(x, y) => x / y
-    //    }
+    def eval(e: Expr) = e match {
+      case Assign(x, y) => m.put(x.name, y)
+//      case Sequence(l) => val r = l.map(eval); r.last
+//      case Lambda(param, body) => l.map(eval)
+//      case Appl(f, x) => x + y
+    }
   }
 }
