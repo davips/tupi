@@ -8,25 +8,17 @@ import scala.util.parsing.input.CharSequenceReader
 object Main extends HM2 with RegexParsers with ImplicitConversions with JavaTokenParsers with PackratParsers {
   type P[+T] = PackratParser[T]
 
-  //Common.
-  private lazy val program = sequence | isequence
-  private lazy val num = floatingPointNumber ^^ (n => Num(n.toFloat))
-  private lazy val str = stringLiteral ^^ Str
-  private lazy val literal = num | str
-  private lazy val scala = "[" ~> rep((identifier <~ ":") ~ t) ~ (str <~ ":") ~ (t <~ "]") ^^ {
-    case l ~ code ~ r =>
-      val l2 = l.map { case id ~ t => id.t = t; id }
-      Scala(l2, code, r)
-  }
-  private lazy val t = "b" ^^^ BoolT | "c" ^^^ CharT | "s" ^^^ StrT | "n" ^^^ NumT
-  private lazy val appl: P[Expr] = (lambda | ilambda | appl | identifier) ~ expr ^^ Appl
+  private lazy val program = sequence() | sequence(true)
 
-  // Explicit args.
+  private def sequence(impargs: Boolean = false) = rep1sep(if (impargs) iexpr else prettyexpr, separator) ^^ Sequence
+
   private lazy val separator = ";" // not(":" ~ "\n") ~> "\n"
-  private lazy val sequence = rep1sep(expr, separator) ^^ Sequence
-  private lazy val expr: P[Expr] = "("~> expr <~ ")" | scala | appl | assign | (lambda | ilambda) | math | term
-  private lazy val assign: P[Expr] = (identifier2 <~ "←") ~ expr ^^ Assign
-  private lazy val lambda = ("{" ~> rep1(identifier) <~ ":") ~ (sequence <~ "}") ^^ {
+  private lazy val prettyexpr: P[Expr] = math() | expr
+  private lazy val expr: P[Expr] = "(" ~> expr <~ ")" | scala | appl | assign | (lambda | ilambda) | term()
+  private lazy val iexpr: P[Expr] = scala | iassign | lambda | math(true) | term(true)
+  private lazy val assign: P[Expr] = (newidentifier <~ "←") ~ prettyexpr ^^ Assign
+  private lazy val iassign: P[Expr] = (newidentifier <~ "←") ~ (assign | lambda | math(true) | term(true)) ^^ Assign
+  private lazy val lambda = ("{" ~> rep1(identifier) <~ ":") ~ (sequence() <~ "}") ^^ {
     case args ~ body =>
       var newbody = body
       for (arg <- args.tail.reverse) {
@@ -34,21 +26,7 @@ object Main extends HM2 with RegexParsers with ImplicitConversions with JavaToke
       }
       Lambda(args.head, newbody)
   }
-  private lazy val math = equality
-  private lazy val equality = chainl1(sum, curry("=") | curry("!=") | curry(">=") | curry("<=") | curry(">") | curry("<"))
-  private lazy val sum = chainl1(product, curry("+") | curry("-"))
-  private lazy val product = chainl1(power, curry("*") | curry("/"))
-  private lazy val power = chainl1(expr, curry("^"))
-  private lazy val term = identifier | literal
-  private lazy val identifier: P[NamedIdent] = ("_" | ident) ^^ NamedIdent
-  private lazy val identifier2: P[NamedIdent] = identifier | ("=" | "!=" | ">=" | "<=" | ">" | "<" | "+" | "-" | "*" | "/" | "^") ^^ NamedIdent
-
-
-  // Implicit args.
-  private lazy val isequence = rep1sep(iexpr, separator) ^^ Sequence
-  private lazy val iexpr: P[Expr] = scala | iassign | lambda | imath | iterm
-  private lazy val iassign: P[Expr] = (identifier2 <~ "←") ~ (assign | lambda | imath | iterm) ^^ { case (ide ~ e) => Assign(ide, e) }
-  private lazy val ilambda = ("{" ~> isequence <~ "}") ^^ {
+  private lazy val ilambda = ("{" ~> sequence(true) <~ "}") ^^ {
     body =>
       def traverse(e: Expr, mx: Int = 0): Int = {
         val vals = e.map {
@@ -59,22 +37,52 @@ object Main extends HM2 with RegexParsers with ImplicitConversions with JavaToke
       }
 
       val args = (1 to traverse(body)).map(AnonIdent)
-
       var newbody = body
       for (arg <- args.tail.reverse) {
         newbody = Sequence(List(Lambda(arg, newbody)))
       }
       Lambda(args.head, newbody)
   }
-  private lazy val imath = iequality
-  private lazy val iequality = chainl1(isum, curry("=") | curry("!=") | curry(">=") | curry("<=") | curry(">") | curry("<"))
-  private lazy val isum = chainl1(iproduct, curry("+") | curry("-"))
-  private lazy val iproduct = chainl1(ipower, curry("*") | curry("/"))
-  private lazy val ipower = chainl1(iexpr, curry("^"))
-  private lazy val iterm = anonidentifier | literal
-  private lazy val anonidentifier = "#" ~> """\d+""".r ^^ (idx => AnonIdent(idx.toInt))
+
+  private lazy val scala = "[" ~> rep((identifier <~ ":") ~ typ) ~ (str <~ ":") ~ (typ <~ "]") ^^ {
+    case l ~ code ~ r =>
+      val l2 = l.map { case id ~ t => id.t = t; id }
+      Scala(l2, code, r)
+  }
+  private lazy val typ = "b" ^^^ BoolT | "c" ^^^ CharT | "s" ^^^ StrT | "n" ^^^ NumT
+
+  private def identifier: P[NamedIdent] = ("_" | ident) ^^ NamedIdent
+
+  private def newidentifier: P[NamedIdent] = identifier |
+    ("=" | "!=" | ">=" | "<=" | ">" | "<" | "+" | "-" | "*" | "/" | "^") ^^ NamedIdent
+
+  private def anonidentifier = "#" ~> """\d+""".r ^^ (idx => AnonIdent(idx.toInt))
+
+  private def math(impargs: Boolean = false) = equality(impargs)
+
+  private def equality(impargs: Boolean = false) = chainl1(
+    sum(impargs), curry("=") | curry("!=") | curry(">=") | curry("<=") | curry(">") | curry("<")
+  )
+
+  private def sum(impargs: Boolean = false) = chainl1(product(impargs), curry("+") | curry("-"))
+
+  private def product(impargs: Boolean = false) = chainl1(power(impargs), curry("*") | curry("/"))
+
+  private def power(impargs: Boolean = false) = chainl1(if (impargs) iexpr else prettyexpr, curry("^"))
+
+  //  private def power(impargs: Boolean = false) = chainl1(appl, curry("^"))
 
   private def curry(op: String) = op ^^^ ((a: Expr, b: Expr) => Appl(Appl(NamedIdent(op), a), b))
+
+  private def term(impargs: Boolean = false) = (if (impargs) anonidentifier else identifier) | literal
+
+  private lazy val literal = num | str
+  private lazy val num = floatingPointNumber ^^ (n => Num(n.toFloat))
+  private lazy val str = stringLiteral ^^ Str
+
+  private lazy val appl: P[Expr] = (appl ~ expr | func ~ expr) ^^ Appl
+  private lazy val func: P[Expr] = lambda | ilambda | identifier
+
 
   def main(args: Array[String]) {
     val arq = Source.fromFile("test.tupi")
