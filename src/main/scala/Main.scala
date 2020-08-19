@@ -1,12 +1,34 @@
-import scala.annotation.tailrec
-import scala.collection.mutable
 import scala.io.Source
-import scala.util.matching.Regex
 import scala.util.parsing.combinator.{ImplicitConversions, JavaTokenParsers, PackratParsers, RegexParsers}
 import scala.util.parsing.input.CharSequenceReader
 
 object Main extends HM2 with RegexParsers with ImplicitConversions with JavaTokenParsers with PackratParsers {
   type P[+T] = PackratParser[T]
+
+  private def f(args: List[NamedIdent], body: Sequence) = {
+    var newbody = body
+    for (arg <- args.tail.reverse) {
+      newbody = Sequence(List(Lambda(arg, newbody)))
+    }
+    Lambda(args.head, newbody)
+  }
+
+  private def g(body: Sequence) = {
+    def traverse(e: Expr, mx: Int = 0): Int = {
+      val vals = e.map {
+        case AnonIdent(idx) if idx > mx => idx
+        case e => traverse(e, mx)
+      }
+      if (vals.nonEmpty) vals.max else mx
+    }
+
+    val args = (1 to traverse(body)).map(AnonIdent)
+    var newbody = body
+    for (arg <- args.tail.reverse) {
+      newbody = Sequence(List(Lambda(arg, newbody)))
+    }
+    Lambda(args.head, newbody)
+  }
 
   private lazy val program = sequence() | sequence(true)
 
@@ -18,32 +40,8 @@ object Main extends HM2 with RegexParsers with ImplicitConversions with JavaToke
   private lazy val iexpr: P[Expr] = scala | iassign | lambda | math(true) | term(true)
   private lazy val assign: P[Expr] = (newidentifier <~ "←") ~ prettyexpr ^^ Assign
   private lazy val iassign: P[Expr] = (newidentifier <~ "←") ~ (assign | lambda | math(true) | term(true)) ^^ Assign
-  private lazy val lambda = ("{" ~> rep1(identifier) <~ ":") ~ (sequence() <~ "}") ^^ {
-    case args ~ body =>
-      var newbody = body
-      for (arg <- args.tail.reverse) {
-        newbody = Sequence(List(Lambda(arg, newbody)))
-      }
-      Lambda(args.head, newbody)
-  }
-  private lazy val ilambda = ("{" ~> sequence(true) <~ "}") ^^ {
-    body =>
-      def traverse(e: Expr, mx: Int = 0): Int = {
-        val vals = e.map {
-          case AnonIdent(idx) if idx > mx => idx
-          case e => traverse(e, mx)
-        }
-        if (vals.nonEmpty) vals.max else mx
-      }
-
-      val args = (1 to traverse(body)).map(AnonIdent)
-      var newbody = body
-      for (arg <- args.tail.reverse) {
-        newbody = Sequence(List(Lambda(arg, newbody)))
-      }
-      Lambda(args.head, newbody)
-  }
-
+  private lazy val lambda = ("{" ~> rep1(identifier) <~ ":") ~ (sequence() <~ "}") ^^ f
+  private lazy val ilambda = ("{" ~> sequence(true) <~ "}") ^^ g
   private lazy val scala = "[" ~> rep((identifier <~ ":") ~ typ) ~ (str <~ ":") ~ (typ <~ "]") ^^ {
     case l ~ code ~ r =>
       val l2 = l.map { case id ~ t => id.t = t; id }
@@ -69,8 +67,6 @@ object Main extends HM2 with RegexParsers with ImplicitConversions with JavaToke
   private def product(impargs: Boolean = false) = chainl1(power(impargs), curry("*") | curry("/"))
 
   private def power(impargs: Boolean = false) = chainl1(if (impargs) iexpr else prettyexpr, curry("^"))
-
-  //  private def power(impargs: Boolean = false) = chainl1(appl, curry("^"))
 
   private def curry(op: String) = op ^^^ ((a: Expr, b: Expr) => Appl(Appl(NamedIdent(op), a), b))
 
