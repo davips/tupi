@@ -7,3 +7,5 @@ scalaVersion := "2.13.3"
 //libraryDependencies += "com.lihaoyi" %% "fastparse" % "2.2.2"
 
 libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2"
+
+libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value

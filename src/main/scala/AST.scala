@@ -1,3 +1,7 @@
+import scala.reflect.runtime.universe._
+import scala.tools.reflect.ToolBox
+import scala.reflect.runtime.currentMirror
+
 trait AST extends Types {
 
   sealed trait Expr extends Iterable[Expr] {
@@ -10,28 +14,32 @@ trait AST extends Types {
     override def toString = "ø"
   }
 
-  case class Bool(value: java.lang.Boolean) extends Expr {
+  trait PrimitiveExpr extends Expr {
+    val value: Any
+  }
+
+  case class Bool(value: java.lang.Boolean) extends PrimitiveExpr {
     override def iterator: Iterator[Expr] = Iterator.empty
 
     override def toString: String = if (value) "↑" else "↓"
   }
 
-  case class Char(value: java.lang.Character) extends Expr {
+  case class Char(value: java.lang.Character) extends PrimitiveExpr {
     override def iterator: Iterator[Expr] = Iterator.empty
 
     override def toString: String = value.toString
   }
 
-  case class Num(value: java.lang.Number) extends Expr {
+  case class Num(value: java.lang.Number) extends PrimitiveExpr {
     override def iterator: Iterator[Expr] = Iterator.empty
 
     override def toString: String = value.toString
   }
 
-  case class Str(text: String) extends Expr {
+  case class Str(value: String) extends PrimitiveExpr {
     override def iterator: Iterator[Expr] = Iterator.empty
 
-    override def toString: String = text
+    override def toString: String = value
   }
 
   case class Assign(a: NamedIdent, b: Expr) extends Expr {
@@ -80,52 +88,29 @@ trait AST extends Types {
     private val types = typ +: params.map(_.t).reverse
     t = types.reduce((to, from) => LambdaT(from, to))
 
+    lazy val func: List[Any] => Any = (args: List[Any]) => {
+      val toolbox = currentMirror.mkToolBox()
+      val vars = params.zipWithIndex.map {
+        case (i@Ident(name), idx) => f"  val $name = args($idx).asInstanceOf[${i.t.scalaType}]\n"
+      }
+      val txt =
+        f"""def f(args: List[Any]) = {
+           |$vars
+           |  (${args.mkString(", ")}) => $code
+           |}""".stripMargin
+      println(txt)
+      val evaluated = toolbox.eval(toolbox.parse(txt))
+      typ match {
+        case BoolT => evaluated.asInstanceOf[List[Any] => Boolean]
+        case CharT => evaluated.asInstanceOf[List[Any] => Character]
+        case StrT => evaluated.asInstanceOf[List[Any] => String]
+        case NumT => evaluated.asInstanceOf[List[Any] => Double]
+      }
+    }
+
     override def iterator: Iterator[Expr] = Iterator.empty
 
     override def toString: String = "[" + params.mkString(",") + ": " + code + "]"
   }
 
 }
-
-//sealed trait BinOp extends Expr {
-//  val a, b: Expr
-//  val op: String
-//
-//  override def iterator: Iterator[Expr] = Iterator(a, b)
-//
-//  override def toString: String = a + op + b
-//}
-//
-//object BinOp {
-//  def unapply(e: BinOp): Option[(Expr, Expr)] = Some(e.a, e.b)
-//}
-//
-//case class Add(a: Expr, b: Expr) extends BinOp {
-//  val op = "+"
-//}
-//
-//case class Sub(a: Expr, b: Expr) extends BinOp {
-//  val op = "-"
-//}
-//
-//case class Mul(a: Expr, b: Expr) extends BinOp {
-//  val op = "*"
-//}
-//
-//case class Div(a: Expr, b: Expr) extends BinOp {
-//  val op = "/"
-//}
-//
-//case class Pow(a: Expr, b: Expr) extends BinOp {
-//  val op = "^"
-//}
-//
-//case class Rem(a: Expr, b: Expr) extends BinOp {
-//  val op = "%"
-//}
-//
-//case class Equal(a: Expr, b: Expr) extends Expr {
-//  override def iterator: Iterator[Expr] = Iterator(a, b)
-//
-//  override def toString: String = a + "=" + b
-//}

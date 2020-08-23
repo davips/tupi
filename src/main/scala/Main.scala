@@ -15,7 +15,7 @@ object Main extends HM2 with RegexParsers with ImplicitConversions with JavaToke
 
   private def g(body: Sequence) = {
     def traverse(e: Expr, mx: Int = 0): Int = {
-      val vals = e.map {
+      val vals = e.map { // Iterable
         case AnonIdent(idx) if idx > mx => idx
         case e => traverse(e, mx)
       }
@@ -44,8 +44,12 @@ object Main extends HM2 with RegexParsers with ImplicitConversions with JavaToke
   private lazy val ilambda = ("{" ~> sequence(true) <~ "}") ^^ g
   private lazy val scala = "[" ~> rep((identifier <~ ":") ~ typ) ~ (str <~ ":") ~ (typ <~ "]") ^^ {
     case l ~ code ~ r =>
-      val l2 = l.map { case id ~ t => id.t = t; id }
-      Scala(l2, code, r)
+      val args = l.map { case id ~ t => id.t = t; id }
+      var newbody = Sequence(List(Scala(args, code, r)))
+      for (arg <- args.tail.reverse) {
+        newbody = Sequence(List(Lambda(arg, newbody)))
+      }
+      Lambda(args.head, newbody)
   }
   private lazy val typ = "b" ^^^ BoolT | "c" ^^^ CharT | "s" ^^^ StrT | "n" ^^^ NumT
 
@@ -73,7 +77,7 @@ object Main extends HM2 with RegexParsers with ImplicitConversions with JavaToke
   private def term(impargs: Boolean = false) = (if (impargs) anonidentifier else identifier) | literal
 
   private lazy val literal = num | str
-  private lazy val num = floatingPointNumber ^^ (n => Num(n.toFloat))
+  private lazy val num = floatingPointNumber ^^ (n => Num(n.toDouble))
   private lazy val str = stringLiteral ^^ Str
 
   private lazy val appl: P[Expr] = (appl ~ expr | func ~ expr) ^^ Appl
@@ -96,13 +100,28 @@ object Main extends HM2 with RegexParsers with ImplicitConversions with JavaToke
     println()
     tryexp(r.get)
 
-    val m = LMap[Expr]()
+    def eval0(e: Expr, m: LMap[Expr]): (Expr, LMap[Expr]) = e match {
+      case Assign(x, y) => Empty() -> m.put(x.name, y)
+      case Sequence(x :: List()) => eval0(x, m)
+      case Sequence(x :: xs) => eval0(Sequence(xs), eval0(x, m)._2)
+      case Appl(Ident(name), x) => Appl(m.get(name), x) -> m
+      case Appl(Lambda(param, body), x) => eval0(body, m.put(param.name, x))
+      case Appl(f, x) => println("Case missing:", f.getClass, x.getClass); sys.exit()
+      case Appl(f, x) => Appl(eval0(f, m)._1, eval0(x, m)._1) -> m
+      case p: PrimitiveExpr => p -> m
+      //        case s@Scala(params, code, typ: PrimitiveExpr) if params.size==1=>
+      //          s.func()
+      //
+      //        case Ident(name) => m.get(name) match {
+      //
+      //          //              .asInstanceOf[String => String]
+      //      case Lambda(param, body) => l.map(eval)
 
-    def eval(e: Expr) = e match {
-      case Assign(x, y) => m.put(x.name, y)
-//      case Sequence(l) => val r = l.map(eval); r.last
-//      case Lambda(param, body) => l.map(eval)
-//      case Appl(f, x) => x + y
     }
+
+    def eval(e: Expr): Any = eval0(e, LMap())._1.asInstanceOf[PrimitiveExpr].value
+
+    val re = eval(r.get)
+    println(re)
   }
 }

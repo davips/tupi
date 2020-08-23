@@ -90,13 +90,6 @@ class TypeSystem extends AST {
       //        unify(NumT, b_typed)
       //        NumT
 
-      //    import scala.reflect.runtime.universe._
-      //    import scala.tools.reflect.ToolBox
-      //
-      //    val code = """(x: String) => x.replace("$", "")"""
-      //    val toolbox = runtimeMirror(getClass.getClassLoader).mkToolBox()
-      //    val func = toolbox.eval(toolbox.parse(code)).asInstanceOf[String => String]
-      //    println(func("$10.50")) // prints "10.50"
       case s: Scala => s.t
       case Sequence(items) =>
         val types = for (it <- items) yield {
@@ -307,7 +300,7 @@ class HM2 extends TypeSystem {
   def tryexp(ast: Expr, env: Env = Map.empty) {
     print(ast + " : ")
     try {
-      val t = analyse(ast, env, print = true)
+      analyse(ast, env, print = true)
     } catch {
       case t: ParseError => print(t.getMessage)
       case t: TypeError => print(t.getMessage)
