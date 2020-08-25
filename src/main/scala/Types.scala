@@ -1,6 +1,8 @@
-trait Types {
+import AST.{Bool, Num, Char, Str, PrimitiveExpr}
 
-  sealed abstract class ExprT {
+object Types {
+
+  sealed trait ExprT {
     val scalaType: String
   }
 
@@ -10,26 +12,38 @@ trait Types {
     val scalaType: String = "null"
   }
 
-  case object BoolT extends ExprT {
+  trait PrimitiveExprT extends ExprT {
+    def cast(value: Any): PrimitiveExpr
+  }
+
+  case object BoolT extends PrimitiveExprT {
     override def toString = "'boolean'"
+
+    def cast(value: Any): Bool = Bool(value.asInstanceOf[Boolean])
 
     val scalaType: String = "Boolean"
   }
 
-  case object NumT extends ExprT {
+  case object NumT extends PrimitiveExprT {
     override def toString = "'number'"
+
+    def cast(value: Any): Num = Num(value.asInstanceOf[Double])
 
     val scalaType: String = "Double"
   }
 
-  case object CharT extends ExprT {
+  case object CharT extends PrimitiveExprT {
     override def toString = "'character'"
+
+    def cast(value: Any): Char = Char(value.asInstanceOf[Character])
 
     val scalaType: String = "Character"
   }
 
-  case object StrT extends ExprT {
+  case object StrT extends PrimitiveExprT {
     override def toString = "'str'"
+
+    def cast(value: Any): Str = Str(value.asInstanceOf[String])
 
     val scalaType: String = "String"
   }
@@ -44,9 +58,9 @@ trait Types {
     override def toString = f"{$from→$to}"
   }
 
-  case class Var(id: Int) extends ExprT {
+  case class Var(id: Int) extends TypeSystem with ExprT {
     var instance: Option[ExprT] = None
-    lazy val name: String = HM.nextUniqueName
+    lazy val name: String = nextUniqueName
     lazy val scalaType: String = instance.get.scalaType
 
     override def toString: String = if (instance.isEmpty) ("t" + id) else instance.get.toString

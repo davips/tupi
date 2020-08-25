@@ -6,6 +6,8 @@ case class LMap[T](m: Map[String, () => T] = Map[String, () => T]()) {
   def put(k: String, v: => T): LMap[T] = LMap(m + (k -> (() => v)))
 
   def get(k: String): T = cache.getOrElseUpdate(k, m(k)())
+
+  def +(other: LMap[T]): LMap[T] = LMap(m ++ other.m)
 }
 
 object LMapTest extends App {

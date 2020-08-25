@@ -1,3 +1,6 @@
+import AST._
+import Types._
+
 /*
  * http://dysphoria.net/code/hindley-milner/HindleyMilner.scala
  * Andrew Forrest
@@ -48,8 +51,12 @@
 
 class ParseError(msg: String) extends Exception(msg)
 
+class TypeError(msg: String) extends Exception(msg)
 
-class TypeSystem extends AST {
+class ParseTypeError(msg: String) extends Exception(msg)
+
+
+class TypeSystem {
 
   type Env = Map[String, ExprT]
 
