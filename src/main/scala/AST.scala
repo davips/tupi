@@ -6,7 +6,7 @@ object AST {
   import Types.{ExprT, LambdaT, PrimitiveExprT}
 
   sealed trait Expr {
-    var t: ExprT = _
+    var t: Option[ExprT] = None
 
     def nested: Iterator[Expr]
   }
@@ -80,7 +80,7 @@ object AST {
   case class Sequence(items: List[Expr]) extends Expr {
     def nested: Iterator[Expr] = items.iterator
 
-    override def toString: String = "[" + items.mkString("; ") + "]"
+    override def toString: String = "<" + items.mkString("; ") + ">"
   }
 
   case class Lambda(param: Ident, body: Sequence) extends Expr {
@@ -96,22 +96,22 @@ object AST {
   }
 
   case class Scala(params: List[NamedIdent], code: Str, typ: PrimitiveExprT) extends Expr {
-    private val types = typ +: params.map(_.t).reverse
-    t = types.reduce((to, from) => LambdaT(from, to))
+//    private val types = typ +: params.map(_.t).reverse
+//    t = Some(typ) //types.reduce((to, from) => LambdaT(from, to))
 
     def func(args: List[Any]): PrimitiveExpr = {
       val toolbox = currentMirror.mkToolBox()
       val vars = params.zipWithIndex.map {
-        case (i@Ident(name), idx) => f"  val $name = args($idx).asInstanceOf[${i.t.scalaType}]\n"
+        case (i@Ident(name), idx) => f"  val $name = args($idx).asInstanceOf[${i.t.get.scalaType}]\n"
       }
-      println("111111111111111111111", code.value)
+//      println("111111111111111111111", code.value)
       val txt =
         f"""def f(args: List[Any]) = {
            |${vars.mkString}
            |  """.stripMargin + code.value +
           f"""|}
               |f(List(${args.mkString(", ")}))""".stripMargin
-      println(txt)
+//      println(txt)
       val evaluated = toolbox.eval(toolbox.parse(txt))
       typ.cast(evaluated)
     }

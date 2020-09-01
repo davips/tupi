@@ -89,51 +89,53 @@ class TypeSystem {
 
   def analyse(ast: Expr, env: Env, nongen: Set[Var], debug: Boolean): (ExprT, Env) = {
     var newenv = env
-    val t = ast match {
-      //      case BinOp(a, b) =>
-      //        val (a_typed, _) = analyse(a, env, nongen, debug)
-      //        val (b_typed, _) = analyse(b, env, nongen, debug)
-      //        unify(NumT, a_typed)
-      //        unify(NumT, b_typed)
-      //        NumT
+    if (ast.t.isDefined) (ast.t.get, env) else {
+      val t = ast match {
+        //      case BinOp(a, b) =>
+        //        val (a_typed, _) = analyse(a, env, nongen, debug)
+        //        val (b_typed, _) = analyse(b, env, nongen, debug)
+        //        unify(NumT, a_typed)
+        //        unify(NumT, b_typed)
+        //        NumT
 
-      case s: Scala => s.t
-      case Sequence(items) =>
-        val types = for (it <- items) yield {
-          val (typ, env2) = analyse(it, newenv, nongen, debug)
-          newenv = env2
-          typ
-        }
-        types.last
-      case Ident(name) => gettype(name, env, nongen)
-      case Appl(fn, arg) =>
-        val (funtype, _) = analyse(fn, env, nongen, debug)
-        val (argtype, _) = analyse(arg, env, nongen, debug)
-        val resulttype = newVar
-        unify(LambdaT(argtype, resulttype), funtype)
-        resulttype
-      case Lambda(arg, body) =>
-        val argtype = newVar
-        val (resulttype, _) = analyse(body, env + (arg.name -> argtype), nongen + argtype, debug)
-        LambdaT(argtype, resulttype)
-      case Assign(id, e) =>
-        val (etype, _) = analyse(e, env, nongen, debug)
-        newenv += (id.name -> etype)
-        EmptyT
-      case Num(_) => NumT
-      //      case Let(v, defn, body) =>
-      //        val defntype = analyse(defn, env, nongen)
-      //        val newenv = env + (v -> defntype)
-      //        analyse(body, newenv, nongen)
-      //      case Letrec(v, defn, body) =>
-      //        val newtype = newVar
-      //        val newenv = env + (v -> newtype)
-      //        val defntype = analyse(defn, newenv, nongen + newtype)
-      //        unify(newtype, defntype)
-      //        analyse(body, newenv, nongen)
+        case s: Scala => s.t.get
+        case Sequence(items) =>
+          val types = for (it <- items) yield {
+            val (typ, env2) = analyse(it, newenv, nongen, debug)
+            newenv = env2
+            typ
+          }
+          types.last
+        case Ident(name) => gettype(name, env, nongen)
+        case Appl(fn, arg) =>
+          val (funtype, _) = analyse(fn, env, nongen, debug)
+          val (argtype, _) = analyse(arg, env, nongen, debug)
+          val resulttype = newVar
+          unify(LambdaT(argtype, resulttype), funtype)
+          resulttype
+        case Lambda(arg, body) =>
+          val argtype = newVar
+          val (resulttype, _) = analyse(body, env + (arg.name -> argtype), nongen + argtype, debug)
+          LambdaT(argtype, resulttype)
+        case Assign(id, e) =>
+          val (etype, _) = analyse(e, env, nongen, debug)
+          newenv += (id.name -> etype)
+          EmptyT
+        case Num(_) => NumT
+        //      case Let(v, defn, body) =>
+        //        val defntype = analyse(defn, env, nongen)
+        //        val newenv = env + (v -> defntype)
+        //        analyse(body, newenv, nongen)
+        //      case Letrec(v, defn, body) =>
+        //        val newtype = newVar
+        //        val newenv = env + (v -> newtype)
+        //        val defntype = analyse(defn, newenv, nongen + newtype)
+        //        unify(newtype, defntype)
+        //        analyse(body, newenv, nongen)
+      }
+      if (debug) println(ast + ":\t" + t)
+      (t, newenv)
     }
-    if (debug) println(ast + ":\t" + t)
-    (t, newenv)
   }
 
   def gettype(name: String, env: Env, nongen: Set[Var]): ExprT = {
@@ -305,7 +307,6 @@ class HM2 extends TypeSystem {
   //  }
 
   def tryexp(ast: Expr, env: Env = Map.empty) {
-    print(ast + " : ")
     try {
       analyse(ast, env, print = true)
     } catch {
