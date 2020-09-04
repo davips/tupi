@@ -107,10 +107,10 @@ object AST {
 //      println("111111111111111111111", code.value)
       val txt =
         f"""def f(args: List[Any]) = {
-           |${vars.mkString}
-           |  """.stripMargin + code.value +
-          f"""|}
-              |f(List(${args.mkString(", ")}))""".stripMargin
+           |${vars.mkString}""".stripMargin + "  " + code.value +
+          f"""
+          |}
+          |f(List(${args.mkString(", ")}))""".stripMargin
 //      println(txt)
       val evaluated = toolbox.eval(toolbox.parse(txt))
       typ.cast(evaluated)

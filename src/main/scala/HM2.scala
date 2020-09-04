@@ -88,6 +88,7 @@ class TypeSystem {
   def analyse(ast: Expr, env: Env, print: Boolean = false): ExprT = analyse(ast, env, Set.empty, print)._1
 
   def analyse(ast: Expr, env: Env, nongen: Set[Var], debug: Boolean): (ExprT, Env) = {
+//    println("AST: " + ast)
     var newenv = env
     if (ast.t.isDefined) (ast.t.get, env) else {
       val t = ast match {
@@ -172,6 +173,7 @@ class TypeSystem {
   def unify(t1: ExprT, t2: ExprT) {
     val type1 = prune(t1)
     val type2 = prune(t2)
+//    println("ty1: " + type1 + " ty2:" + type2)
     (type1, type2) match {
       case (a: Var, b) => if (a != b) {
         if (occursintype(a, b))
@@ -182,7 +184,7 @@ class TypeSystem {
       case (LambdaT(froma, toa), LambdaT(fromb, tob)) =>
         unify(froma, fromb)
         unify(toa, tob)
-      case (LambdaT(froma, _), b) => throw new TypeError(b + " cannot be applied (to " + froma + ")")
+      case (l@LambdaT(froma, body), func) => throw new TypeError("Expected: " + func + ". Found: " + l + ")")
       case (a, b) if a != b => throw new TypeError("Type mismatch: " + a + "≠" + b)
       case (a, b) =>
     }

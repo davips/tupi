@@ -40,7 +40,7 @@ object Main extends HM2 with RegexParsers with ImplicitConversions with JavaToke
 
   private lazy val separator = ";" // not(":" ~ "\n") ~> "\n"
   private lazy val prettyexpr: P[Expr] = math() | expr
-  private lazy val expr: P[Expr] = "(" ~> expr <~ ")" | scala | appl | assign | (lambda | ilambda) | term() | "{" ~> infixops <~ "}"
+  private lazy val expr: P[Expr] = "(" ~> rep1sep(prettyexpr, separator) <~ ")" ^^ Sequence | "(" ~> prettyexpr <~ ")" | scala | appl | assign | (lambda | ilambda) | term() | "{" ~> infixops <~ "}"
   private lazy val iexpr: P[Expr] = scala | iassign | lambda | math(true) | term(true) | "{" ~> infixops <~ "}"
   private lazy val assign: P[Expr] = (newidentifier <~ "←") ~ prettyexpr ^^ Assign
   private lazy val iassign: P[Expr] = (newidentifier <~ "←") ~ (assign | lambda | math(true) | term(true)) ^^ Assign
@@ -64,7 +64,7 @@ object Main extends HM2 with RegexParsers with ImplicitConversions with JavaToke
   private lazy val typ = "b" ^^^ BoolT | "c" ^^^ CharT | "s" ^^^ StrT | "n" ^^^ NumT
   private lazy val identifier = ("_" | ident) ^^ NamedIdent
   private lazy val newidentifier = identifier | infixops
-  private lazy val infixops = ("=" | "!=" | ">=" | "<=" | ">" | "<" | "+" | "-" | "*" | "/" | "^")  ^^ NamedIdent
+  private lazy val infixops = ("=" | "!=" | ">=" | "<=" | ">" | "<" | "+" | "-" | "*" | "/" | "^") ^^ NamedIdent
   private lazy val anonidentifier = "#" ~> """\d+""".r ^^ (idx => AnonIdent(idx.toInt))
 
   private def math(impargs: Boolean = false) = equality(impargs)
@@ -77,7 +77,7 @@ object Main extends HM2 with RegexParsers with ImplicitConversions with JavaToke
 
   private def product(impargs: Boolean = false) = chainl1(power(impargs), curry("*") | curry("/"))
 
-  private def power(impargs: Boolean = false) = chainl1(if (impargs) iexpr else prettyexpr, curry("^"))
+  private def power(impargs: Boolean = false) = chainl1(if (impargs) iexpr else expr, curry("^"))
 
   private def curry(op: String) = op ^^^ ((a: Expr, b: Expr) => Appl(Appl(NamedIdent(op), a), b))
 
@@ -88,13 +88,13 @@ object Main extends HM2 with RegexParsers with ImplicitConversions with JavaToke
   private lazy val str = stringLiteral ^^ (str => Str(str.tail.dropRight(1)))
 
   private lazy val appl: P[Expr] = (appl ~ expr | func ~ expr) ^^ Appl
-  private lazy val func: P[Expr] = lambda | ilambda | identifier
+  private lazy val func: P[Expr] = lambda | ilambda | identifier | "{" ~> infixops <~ "}"
 
 
   def main(args: Array[String]) {
     val arq = Source.fromFile("test.tupi")
     val txt = arq.getLines().mkString("\n")
-    val txt2 = txt.replace("\n", ";\n").lines().filter(!_.startsWith("~")).toArray().toList.mkString //.lines().map(_.trim).toArray().toList.mkString("\n").replace("\n}", "ŋ}").replace("{\n", "ŋ{").replace(":\n", "ŋ:").replace("\n", ";\n").replace("ŋ:", ":\n").replace("ŋ{", "{\n").replace("ŋ}", "\n}")
+    val txt2 = txt.replace("\n", ";\n").replace("(;\n", "(\n").replace(";\n)", "\n)").lines().filter(!_.startsWith("~")).toArray().toList.mkString //.lines().map(_.trim).toArray().toList.mkString("\n").replace("\n}", "ŋ}").replace("{\n", "ŋ{").replace(":\n", "ŋ:").replace("\n", ";\n").replace("ŋ:", ":\n").replace("ŋ{", "{\n").replace("ŋ}", "\n}")
     val txt3 = if (txt2.endsWith(";")) txt2.dropRight(1) else txt2
     val r = {
       val st = System.currentTimeMillis()
@@ -106,34 +106,36 @@ object Main extends HM2 with RegexParsers with ImplicitConversions with JavaToke
     println()
     println(r)
     println()
-    tryexp(r.get)
+    if (r.successful) {
+      tryexp(r.get)
 
-    def ev(e: Expr, m: LMap[Expr], q: Queue[Expr]): (Expr, LMap[Expr]) = {
-      val e2 -> m2 = e match {
-        case Assign(x, y) => Empty() -> m.put(x.name, y)
-        case Ident(name) => m.get(name) -> m
-        case Sequence(x :: List()) => ev(x, m, q)
-        case Sequence((a@Assign(_, _)) :: xs) => ev(Sequence(xs), ev(a, m, q)._2, q)
-        case Sequence(x :: xs) => ev(Sequence(xs), m, q)
-        case Appl(f, x) => ev(f, m, ev(x, m, q)._1 +: q)
-        case Lambda(arg, body) if q.nonEmpty =>
-          val x -> q2 = q.dequeue
-          ev(body, m.put(arg.name, x), q2)
-        case p: PrimitiveExpr => p -> m
-        case s@Scala(params, _, _) => s.func(params.map(x => m.get(x.name))) -> m
-        case Lambda(arg, body) => Empty() -> m
+      def ev(e: Expr, m: LMap[Expr], q: Queue[Expr]): (Expr, LMap[Expr]) = {
+        val e2 -> m2 = e match {
+          case Assign(x, y) => Empty() -> m.put(x.name, y)
+          case Ident(name) => m.get(name) -> m
+          case Sequence(x :: List()) => ev(x, m, q)
+          case Sequence((a@Assign(_, _)) :: xs) => ev(Sequence(xs), ev(a, m, q)._2, q)
+          case Sequence(x :: xs) => ev(Sequence(xs), m, q)  // TODO: tail call optimization
+          case Appl(f, x) => ev(f, m, ev(x, m, q)._1 +: q)
+          case Lambda(arg, body) if q.nonEmpty =>
+            val x -> q2 = q.dequeue
+            ev(body, m.put(arg.name, x), q2)
+          case p: PrimitiveExpr => p -> m
+          case s@Scala(params, _, _) => s.func(params.map(x => m.get(x.name))) -> m
+          case Lambda(arg, body) => Empty() -> m
+        }
+        if (e2.isInstanceOf[PrimitiveExpr]) (e2, m2) else ev(e2, m2, q)
       }
-      if (e2.isInstanceOf[PrimitiveExpr]) (e2, m2) else ev(e2, m2, q)
-    }
 
-    def eval(e: Expr): Any = {
-      val re = ev(e, LMap(), Queue())
-      //      println(">>>  " + re._1)
-      re._1.asInstanceOf[PrimitiveExpr].value
-    }
+      def eval(e: Expr): Any = {
+        val re = ev(e, LMap(), Queue())
+        //      println(">>>  " + re._1)
+        re._1.asInstanceOf[PrimitiveExpr].value
+      }
 
-    val re = eval(r.get)
-    println()
-    println(re)
+      val re = eval(r.get)
+      println()
+      println(re)
+    }
   }
 }
