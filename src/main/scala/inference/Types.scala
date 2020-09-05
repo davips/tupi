@@ -1,5 +1,6 @@
-import AST.{Bool, Num, Char, Str, PrimitiveExpr}
+package inference
 
+import parsing.AST.{Bool, Char, Num, PrimitiveExpr, Str}
 object Types {
 
   sealed trait ExprT {

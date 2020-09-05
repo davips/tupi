@@ -1,9 +1,13 @@
-import scala.tools.reflect.ToolBox
+package parsing
+
+import runtime.LMap
+
 import scala.reflect.runtime.currentMirror
+import scala.tools.reflect.ToolBox
 
 object AST {
 
-  import Types.{ExprT, LambdaT, PrimitiveExprT}
+  import inference.Types.{ExprT, PrimitiveExprT}
 
   sealed trait Expr {
     var t: Option[ExprT] = None

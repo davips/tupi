@@ -1,15 +1,13 @@
-a ← 5
+~ + e / viriam de uma lib:
 + ← [x:n y:n "x+y":n]
-g←3 + 2
 / ← [x:n y:n "x/y":n]
-f ← {#1 + #2+a}
-z ← f 77 5
-f  (50 / 4)
-b ← {/ }
-z ← z
-12/2/3
-h ← (
-    x ←4+3
-    h
-)
-h
+
+~ programa:
+add ← {#1 + #2}
+a ← add 10 4
+
+div ← {a b: a/b}
+d ← div 4 2
+
+a / d
+

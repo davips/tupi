@@ -33,9 +33,9 @@
 ////
 ////case class Letrec(v: String, defn: Printer, body: Printer) extends Printer
 //
-//class TypeError(msg: String) extends Exception(msg)
+//class inference.TypeError(msg: String) extends Exception(msg)
 //
-//class ParseTypeError(msg: String) extends Exception(msg)
+//class inference.ParseTypeError(msg: String) extends Exception(msg)
 //
 //object HM extends AST {
 //  var last_line_with_errors = 0
@@ -78,7 +78,7 @@
 //  //         else
 //  //            args.mkString(id + " ", " ", "")
 //  //      }
-//  //      case x => "" //throw new TypeError("Unmatched " + x + " to pretty-print.")
+//  //      case x => "" //throw new inference.TypeError("Unmatched " + x + " to pretty-print.")
 //  //   }
 //
 //  def check(ast: Expr) {
@@ -107,7 +107,7 @@
 //      if (envi.contains(id))
 //        fresh(envi(id), nongen)
 //      else
-//        throw new ParseTypeError("at line " + last_line_with_errors + ": Undefined symbol " + id)
+//        throw new inference.ParseTypeError("at line " + last_line_with_errors + ": inference.Undefined symbol " + id)
 //    }
 //
 //    def fresh(t: ExprT, nongen: Set[Var]): ExprT = {
@@ -161,7 +161,7 @@
 //    def register_types_and_throw_exception(str1: String, str2: String): Nothing = {
 //      last_types_with_errors(0) = str1
 //      last_types_with_errors(1) = str2
-//      throw new TypeError("at line " + last_line_with_errors + ": " + str1 + " expected, but " + str2 + " found.")
+//      throw new inference.TypeError("at line " + last_line_with_errors + ": " + str1 + " expected, but " + str2 + " found.")
 //    }
 //
 //    def unify(t1: ExprT, t2: ExprT) {
@@ -170,7 +170,7 @@
 //      (type1, type2) match {
 //        case (a: Var, b) => if (a != b) {
 //          if (occursintype(a, b))
-//            throw new TypeError("at line " + last_line_with_errors + ": recursive unification.")
+//            throw new inference.TypeError("at line " + last_line_with_errors + ": recursive unification.")
 //          a.instance = Some(b)
 //        }
 //        case (a, b: Var) => unify(b, a)
@@ -222,7 +222,7 @@
 //        //        try {
 //        //          element_types.tail map (unify(element_types.head, _))
 //        //        } catch {
-//        //          case e: TypeError => throw new TypeError("at line " + last_line_with_errors + ": " + e.getMessage + "\nHint: all elements should have the same type inside a list.")
+//        //          case e: inference.TypeError => throw new inference.TypeError("at line " + last_line_with_errors + ": " + e.getMessage + "\nHint: all elements should have the same type inside a list.")
 //        //        }
 //        //        li.t
 //        //      }
@@ -237,7 +237,7 @@
 //        //        try {
 //        //          unify(aT, bT)
 //        //        } catch {
-//        //          case e: TypeError => throw new TypeError("at line " + last_line_with_errors + ": " + e.getMessage + str)
+//        //          case e: inference.TypeError => throw new inference.TypeError("at line " + last_line_with_errors + ": " + e.getMessage + str)
 //        //        }
 //        //        aT
 //        //      }
