@@ -1,6 +1,7 @@
 package inference
 
-import parsing.AST.{Bool, Char, Num, PrimitiveExpr, Str}
+import parsing.AST.{Native, PrimitiveExpr}
+
 object Types {
 
   sealed trait ExprT {
@@ -8,44 +9,34 @@ object Types {
   }
 
   case object EmptyT extends ExprT {
-    override def toString = "'empty'"
+    override def toString = "'ø'"
 
     val scalaType: String = "null"
   }
 
   trait PrimitiveExprT extends ExprT {
-    def cast(value: Any): PrimitiveExpr
+    val expr: PrimitiveExpr
+
+    override def equals(obj: Any): Boolean = obj.getClass == this.getClass
   }
 
-  case object BoolT extends PrimitiveExprT {
-    override def toString = "'boolean'"
-
-    def cast(value: Any): Bool = Bool(value.asInstanceOf[Boolean])
-
+  case class BoolT(expr: PrimitiveExpr = Native) extends PrimitiveExprT {
+    override val toString = "'boolean'"
     val scalaType: String = "Boolean"
   }
 
-  case object NumT extends PrimitiveExprT {
-    override def toString = "'number'"
-
-    def cast(value: Any): Num = Num(value.asInstanceOf[Double])
-
+  case class NumT(expr: PrimitiveExpr = Native) extends PrimitiveExprT {
+    override val toString = "'number'"
     val scalaType: String = "Double"
   }
 
-  case object CharT extends PrimitiveExprT {
-    override def toString = "'character'"
-
-    def cast(value: Any): Char = Char(value.asInstanceOf[Character])
-
+  case class CharT(expr: PrimitiveExpr = Native) extends PrimitiveExprT {
+    override val toString = "'char'"
     val scalaType: String = "Character"
   }
 
-  case object StrT extends PrimitiveExprT {
-    override def toString = "'str'"
-
-    def cast(value: Any): Str = Str(value.asInstanceOf[String])
-
+  case class StrT(expr: PrimitiveExpr = Native) extends PrimitiveExprT {
+    override val toString = "'str'"
     val scalaType: String = "String"
   }
 

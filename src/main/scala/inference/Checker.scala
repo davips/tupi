@@ -89,9 +89,10 @@ class TypeSystem {
               } else throw p
           }
           EmptyT
-        case Num(_) => NumT
+        case n: Num => NumT(n)
+        case s: Str => StrT(s)
       }
-      if (debug) println(ast + ":\t" + t)
+      if (debug) println("%-40s".format(t) + ":\t" + ast)
       (t, newenv)
     }
   }
@@ -117,9 +118,7 @@ class TypeSystem {
           }
         case LambdaT(from, to) => LambdaT(freshrec(from), freshrec(to))
         case EmptyT => EmptyT
-        case BoolT => BoolT
-        case NumT => NumT
-        case CharT => CharT
+        case pt@(BoolT(_) | NumT(_) | CharT(_)) => pt
       }
     }
 
@@ -141,8 +140,11 @@ class TypeSystem {
       case (LambdaT(froma, toa), LambdaT(fromb, tob)) =>
         unify(froma, fromb)
         unify(toa, tob)
-      case (l@LambdaT(froma, body), func) => throw new TypeError("Expected: " + func + ". Found: " + l + ")")
-      case (a, b) if a != b => throw new TypeError("Type mismatch: " + a + "≠" + b)
+      case (l@LambdaT(froma, body), func) =>
+        throw new TypeError("Expected: " + l + ". Found: " + func + ")\n" + func + " cannot be applied to " + froma)
+//      case (a, b) if a.toString == b.toString =>
+      case (a, b) if a != b =>
+        throw new TypeError("Type mismatch: " + a + "≠" + b)
       case (a, b) =>
     }
   }

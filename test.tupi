@@ -1,13 +1,8 @@
 ~ + e / viriam de uma lib:
-+ ← [x:n y:n "x+y":n]
+- ← [x:n y:n "x-y":n]
 / ← [x:n y:n "x/y":n]
+^ ← [x:n y:n "scala.math.pow(x,y)":n]
 
 ~ programa:
-add ← {#1 + #2}
-a ← add 10 4
-
-div ← {a b: a/b}
-d ← div 4 2
-
-a / d
-
+d ← {_1 / (2 ^ 1)}
+d 2 "4"

@@ -15,60 +15,66 @@ object AST {
     def nested: Iterator[Expr]
   }
 
+
   trait PrimitiveExpr extends Expr {
     val value: Any
   }
 
-  case class Empty() extends PrimitiveExpr {
-    val value: Null = null
+  case object Native extends PrimitiveExpr {
+    lazy val value: Any = ???
+    override val toString = "'native'"
 
     def nested: Iterator[Expr] = Iterator.empty
+  }
 
-    override def toString = "ø"
+  case class Empty() extends PrimitiveExpr {
+    val value: Null = null
+    override val toString = "ø"
+
+    def nested: Iterator[Expr] = Iterator.empty
   }
 
   case class Bool(value: java.lang.Boolean) extends PrimitiveExpr {
-    def nested: Iterator[Expr] = Iterator.empty
+    override val toString: String = if (value) "↑" else "↓"
 
-    override def toString: String = if (value) "↑" else "↓"
+    def nested: Iterator[Expr] = Iterator.empty
   }
 
   case class Char(value: java.lang.Character) extends PrimitiveExpr {
-    def nested: Iterator[Expr] = Iterator.empty
+    override val toString: String = value.toString
 
-    override def toString: String = value.toString
+    def nested: Iterator[Expr] = Iterator.empty
   }
 
   case class Num(value: java.lang.Number) extends PrimitiveExpr {
-    def nested: Iterator[Expr] = Iterator.empty
+    override val toString: String = value.toString
 
-    override def toString: String = value.toString
+    def nested: Iterator[Expr] = Iterator.empty
   }
 
   case class Str(value: String) extends PrimitiveExpr {
-    def nested: Iterator[Expr] = Iterator.empty
+    override lazy val toString: String = value
 
-    override def toString: String = value
+    def nested: Iterator[Expr] = Iterator.empty
   }
 
   case class Assign(a: NamedIdent, b: Expr) extends Expr {
-    def nested: Iterator[Expr] = Iterator(a, b)
+    override val toString: String = a + "←" + b
 
-    override def toString: String = a + "←" + b
+    def nested: Iterator[Expr] = Iterator(a, b)
   }
 
   case class Appl(a: Expr, b: Expr) extends Expr {
-    def nested: Iterator[Expr] = Iterator(a, b)
+    override val toString: String = a + "(" + b + ")"
 
-    override def toString: String = a + "(" + b + ")"
+    def nested: Iterator[Expr] = Iterator(a, b)
   }
 
   trait Ident extends Expr {
     val name: String
+    override val toString: String = name
 
     def nested: Iterator[Expr] = Iterator.empty
-
-    override def toString: String = name
   }
 
   object Ident {
@@ -77,52 +83,55 @@ object AST {
 
   case class NamedIdent(name: String) extends Ident
 
-  case class AnonIdent(idx: Int) extends Ident {
-    val name: String = "#" + idx
+  case class AnonIdent() extends Ident {
+    val name: String = "_"
+  }
+
+  case class AnonIdentN(idx: Int) extends Ident {
+    val name: String = "_" + idx
   }
 
   case class Sequence(items: List[Expr]) extends Expr {
-    def nested: Iterator[Expr] = items.iterator
+    override val toString: String = "<" + items.mkString("; ") + ">"
 
-    override def toString: String = "<" + items.mkString("; ") + ">"
+    def nested: Iterator[Expr] = items.iterator
   }
 
   case class Lambda(param: Ident, body: Sequence) extends Expr {
-    def nested: Iterator[Expr] = body.nested
+    override val toString: String = "{" + param + ": " + body + "}"
 
-    override def toString: String = "{" + param + ": " + body + "}"
+    def nested: Iterator[Expr] = body.nested
   }
 
   case class Closure(body: Expr, context: LMap[Expr]) extends Expr {
-    def nested: Iterator[Expr] = Iterator.empty
+    override val toString: String = "(" + body + ": " + context.m.keys + ")"
 
-    override def toString: String = "(" + body + ": " + context.m.keys + ")"
+    def nested: Iterator[Expr] = Iterator.empty
   }
 
   case class Scala(params: List[NamedIdent], code: Str, typ: PrimitiveExprT) extends Expr {
-//    private val types = typ +: params.map(_.t).reverse
-//    t = Some(typ) //types.reduce((to, from) => LambdaT(from, to))
+    override val toString: String = "[" + params.mkString(",") + ": " + code + "]"
+    //    private val types = typ +: params.map(_.t).reverse
+    //    t = Some(typ) //types.reduce((to, from) => LambdaT(from, to))
 
     def func(args: List[Any]): PrimitiveExpr = {
       val toolbox = currentMirror.mkToolBox()
       val vars = params.zipWithIndex.map {
         case (i@Ident(name), idx) => f"  val $name = args($idx).asInstanceOf[${i.t.get.scalaType}]\n"
       }
-//      println("111111111111111111111", code.value)
+      //      println("111111111111111111111", code.value)
       val txt =
         f"""def f(args: List[Any]) = {
            |${vars.mkString}""".stripMargin + "  " + code.value +
           f"""
-          |}
-          |f(List(${args.mkString(", ")}))""".stripMargin
-//      println(txt)
+             |}
+             |f(List(${args.mkString(", ")}))""".stripMargin
+      //      println(txt)
       val evaluated = toolbox.eval(toolbox.parse(txt))
-      typ.cast(evaluated)
+      evaluated.asInstanceOf[PrimitiveExprT].expr
     }
 
     def nested: Iterator[Expr] = Iterator.empty
-
-    override def toString: String = "[" + params.mkString(",") + ": " + code + "]"
   }
 
 }
