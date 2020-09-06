@@ -1,6 +1,7 @@
 package inference
 
-import parsing.AST.{Native, PrimitiveExpr}
+import parsing.AST
+import parsing.AST._
 
 object Types {
 
@@ -18,6 +19,17 @@ object Types {
     val expr: PrimitiveExpr
 
     override def equals(obj: Any): Boolean = obj.getClass == this.getClass
+  }
+
+  object PrimitiveExprT {
+    def unapply(exprt: PrimitiveExprT): Option[AST.PrimitiveExpr] = Some(exprt.expr)
+
+    def apply(expr: PrimitiveExpr): PrimitiveExprT = expr match {
+      case Bool(_) => BoolT(expr)
+      case Num(_) => NumT(expr)
+      case Char(_) => CharT(expr)
+      case Str(_) => StrT(expr)
+    }
   }
 
   case class BoolT(expr: PrimitiveExpr = Native) extends PrimitiveExprT {

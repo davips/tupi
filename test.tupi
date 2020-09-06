@@ -4,5 +4,6 @@
 ^ ← [x:n y:n "scala.math.pow(x,y)":n]
 
 ~ programa:
-d ← {_1 / (2 ^ 1)}
-d 2 "4"
+x ←15
+d ← {_1 / (x ^ _2)}
+d 2 4

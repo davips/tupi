@@ -106,6 +106,7 @@ class TypeSystem {
 
   def fresh(t: ExprT, nongen: Set[Var]): ExprT = {
     import scala.collection.mutable
+    import inference.Types.PrimitiveExprT
     val mappings = new mutable.HashMap[Var, Var]
 
     def freshrec(tp: ExprT): ExprT = {
@@ -118,7 +119,7 @@ class TypeSystem {
           }
         case LambdaT(from, to) => LambdaT(freshrec(from), freshrec(to))
         case EmptyT => EmptyT
-        case pt@(BoolT(_) | NumT(_) | CharT(_)) => pt
+        case pet: PrimitiveExprT => pet
       }
     }
 
@@ -142,7 +143,7 @@ class TypeSystem {
         unify(toa, tob)
       case (l@LambdaT(froma, body), func) =>
         throw new TypeError("Expected: " + l + ". Found: " + func + ")\n" + func + " cannot be applied to " + froma)
-//      case (a, b) if a.toString == b.toString =>
+      //      case (a, b) if a.toString == b.toString =>
       case (a, b) if a != b =>
         throw new TypeError("Type mismatch: " + a + "≠" + b)
       case (a, b) =>

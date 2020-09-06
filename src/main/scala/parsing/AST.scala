@@ -20,6 +20,17 @@ object AST {
     val value: Any
   }
 
+  object PrimitiveExpr {
+    def unapply(expr: PrimitiveExpr): Option[Any] = Some(expr.value)
+
+    def apply(value: Any): PrimitiveExpr = value match {
+      case v: Boolean => Bool(v)
+      case v: Double => Num(v)
+      case v: Character => Char(v)
+      case v: String => Str(v)
+    }
+  }
+
   case object Native extends PrimitiveExpr {
     lazy val value: Any = ???
     override val toString = "'native'"
@@ -128,7 +139,7 @@ object AST {
              |f(List(${args.mkString(", ")}))""".stripMargin
       //      println(txt)
       val evaluated = toolbox.eval(toolbox.parse(txt))
-      evaluated.asInstanceOf[PrimitiveExprT].expr
+      PrimitiveExpr(evaluated)
     }
 
     def nested: Iterator[Expr] = Iterator.empty
