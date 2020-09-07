@@ -142,7 +142,7 @@ class TypeSystem {
         unify(froma, fromb)
         unify(toa, tob)
       case (la@LambdaT(froma, body), func2:PrimitiveExprT) =>
-        throw new TypeError("Expected: " + la.expr + ". Found: " + func2.expr + ")\n" + func2 + " cannot be applied to " + froma)
+        throw new TypeError("Expected: " + la + ". Found: " + func2.expr + ")\n" + func2 + " cannot be applied to " + froma)
       //      case (a, b) if a.toString == b.toString =>
       case (a, b) if a != b =>
         throw new TypeError("Type mismatch: " + a + "≠" + b)

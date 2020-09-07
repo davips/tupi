@@ -1,7 +1,7 @@
 package parsing
 
 import inference.Types
-import inference.Types.EmptyT
+import inference.Types.{EmptyT, LambdaT}
 import runtime.LMap
 
 import scala.reflect.runtime.currentMirror
@@ -72,11 +72,10 @@ object AST {
     def nested: Iterator[Expr] = Iterator.empty
   }
 
-  case class Func(from: ExprT, to: ExprT) extends PrimitiveExpr {
-    override lazy val value: Func = this
-    override val toString: String = "{" + from + "→" + to + "}"
+  case class Func(value: Lambda, ctx:LMap[Expr]) extends PrimitiveExpr {
+    override val toString: String = value.t.getOrElse("'undefined function type'").toString
 
-    def nested: Iterator[Expr] = Iterator.empty
+    def nested: Iterator[Expr] = Iterator.empty //TODO: check this
   }
 
   case class Lambda(param: Ident, body: Sequence) extends Expr {

@@ -5,8 +5,8 @@
 ^ ← [x:n y:n "scala.math.pow(x,y)":n]
 
 ~ programa:
-x ←15
-d ← {x: z ← {x*_1 / (x ^ _2)}; z}
+x ←5
+d ← {x: z ← {_1 / (x ^ _2)}; z}
 d 2 4
 f←{a: {x*_1 / (x ^ _2)} 34; d}
-f 3 4 2
+f 3 2 1

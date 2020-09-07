@@ -57,10 +57,8 @@ object Types {
   //  }
 
   case class LambdaT(from: ExprT, to: ExprT) extends ExprT {
-    lazy val expr: PrimitiveExpr = Func(from, to)
+    override val toString = f"{$from→$to}"
     lazy val scalaType: String = f"$from => $to"
-
-    override def toString = f"{$from→$to}"
   }
 
   case class Var(id: Int) extends TypeSystem with ExprT {
