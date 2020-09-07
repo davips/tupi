@@ -66,7 +66,7 @@ class TypeSystem {
           val (funtype, _) = analyse(fn, env, nongen, debug)
           val (argtype, _) = analyse(arg, env, nongen, debug)
           val resulttype = newVar
-          unify(LambdaT(argtype, resulttype), funtype)  // TODO: verify if we really need to pass some expr here for LambdaT
+          unify(LambdaT(argtype, resulttype), funtype) // TODO: verify if we need to pass some expr here for LambdaT
           resulttype
         case Lambda(arg, body) =>
           val argtype = newVar
@@ -92,7 +92,7 @@ class TypeSystem {
         case n: Num => NumT(n)
         case s: Str => StrT(s)
       }
-      if (debug) println("%-40s".format(t) + ":\t" + ast)
+      if (debug) println("%-40s".format(ast.toString).take(42) + ": " + t)
       (t, newenv)
     }
   }
@@ -127,7 +127,7 @@ class TypeSystem {
   }
 
 
-  def unify(t1: ExprT, t2: ExprT) {
+  def unify(t1: ExprT, t2: ExprT, reverse: Boolean = false) {
     val type1 = prune(t1)
     val type2 = prune(t2)
     //    println("ty1: " + type1 + " ty2:" + type2)
@@ -137,15 +137,19 @@ class TypeSystem {
           throw new TypeError("recursive unification")
         a.instance = Some(b)
       }
-      case (a, b: Var) => unify(b, a)
+      case (a, b: Var) => unify(b, a, reverse = true)
       case (LambdaT(froma, toa), LambdaT(fromb, tob)) =>
         unify(froma, fromb)
         unify(toa, tob)
-      case (la@LambdaT(froma, body), func2:PrimitiveExprT) =>
-        throw new TypeError("Expected: " + la + ". Found: " + func2.expr + ")\n" + func2 + " cannot be applied to " + froma)
+      case (la@LambdaT(froma, body), func2: PrimitiveExprT) =>
+        val fst -> snd = if (reverse) la -> func2.expr else func2.expr -> la
+        throw new TypeError("Expected: " + fst + ". Found: " + snd + ")\n" + func2 + " cannot be applied to " + froma)
       //      case (a, b) if a.toString == b.toString =>
-      case (a, b) if a != b =>
-        throw new TypeError("Type mismatch: " + a + "≠" + b)
+      case (a, b: PrimitiveExprT) if a != b =>
+        throw new TypeError(f"Type mismatch: $a ≠ ${b.expr}!  Types differ... $a ≠ $b!")
+      case (a: PrimitiveExprT, b) if a != b =>
+        throw new TypeError(f"Type mismatch: ${a.expr} ≠ $b!  Types differ... $a ≠ $b!")
+      case (a, b) if a != b => throw new TypeError("Type mismatch: " + a + "≠" + b)
       case (a, b) =>
     }
   }

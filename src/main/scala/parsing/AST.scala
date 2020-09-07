@@ -33,9 +33,9 @@ object AST {
     }
   }
 
-  case object Native extends PrimitiveExpr {
+  case class Native(typ: String) extends PrimitiveExpr {
     lazy val value = "'a native value'"
-    override val toString = "'native'"
+    override val toString: String = "'native " + typ + "'"
 
     def nested: Iterator[Expr] = Iterator.empty
   }
@@ -72,7 +72,7 @@ object AST {
     def nested: Iterator[Expr] = Iterator.empty
   }
 
-  case class Func(value: Lambda, ctx:LMap[Expr]) extends PrimitiveExpr {
+  case class Func(value: Lambda, ctx: LMap[Expr]) extends PrimitiveExpr {
     override val toString: String = value.t.getOrElse("'undefined function type'").toString
 
     def nested: Iterator[Expr] = Iterator.empty //TODO: check this
