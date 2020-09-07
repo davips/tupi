@@ -1,5 +1,6 @@
 package evaluation
 
+import inference.Types.{EmptyT, LambdaT}
 import parsing.AST._
 import runtime.LMap
 
@@ -24,7 +25,7 @@ object Interpreter {
         ev(body, m.put(arg.name, x), q2)
       case p: PrimitiveExpr => p -> m
       case s@Scala(params, _, _) => s.func(params.map(x => m(x.name))) -> m
-      case Lambda(arg, body) => Empty() -> m
+      case Lambda(arg, body) => Empty() -> m // It seems we will need Closure here, since Lambda alone is not always useless, it can be returned as a value to be applied later
     }
     if (e2.isInstanceOf[PrimitiveExpr]) (e2, m2) else ev(e2, m2, q)
   }

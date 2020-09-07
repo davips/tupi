@@ -12,7 +12,7 @@ object Types {
   case object EmptyT extends ExprT {
     override def toString = "'ø'"
 
-    val scalaType: String = "null"
+    val scalaType: String = "Null"
   }
 
   trait PrimitiveExprT extends ExprT {
@@ -57,6 +57,7 @@ object Types {
   //  }
 
   case class LambdaT(from: ExprT, to: ExprT) extends ExprT {
+    lazy val expr: PrimitiveExpr = Func(from, to)
     lazy val scalaType: String = f"$from => $to"
 
     override def toString = f"{$from→$to}"
@@ -67,7 +68,7 @@ object Types {
     lazy val name: String = nextUniqueName
     lazy val scalaType: String = instance.get.scalaType
 
-    override def toString: String = if (instance.isEmpty) ("t" + id) else instance.get.toString
+    override def toString: String = if (instance.isEmpty) name else instance.get.toString
   }
 
 }

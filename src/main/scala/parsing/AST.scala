@@ -1,5 +1,7 @@
 package parsing
 
+import inference.Types
+import inference.Types.EmptyT
 import runtime.LMap
 
 import scala.reflect.runtime.currentMirror
@@ -16,7 +18,7 @@ object AST {
   }
 
 
-  trait PrimitiveExpr extends Expr {
+  sealed trait PrimitiveExpr extends Expr {
     val value: Any
   }
 
@@ -32,15 +34,16 @@ object AST {
   }
 
   case object Native extends PrimitiveExpr {
-    lazy val value: Any = ???
+    lazy val value = "'a native value'"
     override val toString = "'native'"
 
     def nested: Iterator[Expr] = Iterator.empty
   }
 
   case class Empty() extends PrimitiveExpr {
-    val value: Null = null
+    lazy val value: Empty = this
     override val toString = "ø"
+    t = Some(EmptyT)
 
     def nested: Iterator[Expr] = Iterator.empty
   }
@@ -67,6 +70,19 @@ object AST {
     override lazy val toString: String = value
 
     def nested: Iterator[Expr] = Iterator.empty
+  }
+
+  case class Func(from: ExprT, to: ExprT) extends PrimitiveExpr {
+    override lazy val value: Func = this
+    override val toString: String = "{" + from + "→" + to + "}"
+
+    def nested: Iterator[Expr] = Iterator.empty
+  }
+
+  case class Lambda(param: Ident, body: Sequence) extends Expr {
+    override val toString: String = "{" + param + ": " + body + "}"
+
+    def nested: Iterator[Expr] = body.nested
   }
 
   case class Assign(a: NamedIdent, b: Expr) extends Expr {
@@ -108,17 +124,12 @@ object AST {
     def nested: Iterator[Expr] = items.iterator
   }
 
-  case class Lambda(param: Ident, body: Sequence) extends Expr {
-    override val toString: String = "{" + param + ": " + body + "}"
 
-    def nested: Iterator[Expr] = body.nested
-  }
-
-  case class Closure(body: Expr, context: LMap[Expr]) extends Expr {
-    override val toString: String = "(" + body + ": " + context.m.keys + ")"
-
-    def nested: Iterator[Expr] = Iterator.empty
-  }
+  //  case class Closure(body: Expr, context: LMap[Expr]) extends Expr {
+  //    override val toString: String = "(" + body + ": " + context.m.keys + ")"
+  //
+  //    def nested: Iterator[Expr] = Iterator.empty
+  //  }
 
   case class Scala(params: List[NamedIdent], code: Str, typ: PrimitiveExprT) extends Expr {
     override val toString: String = "[" + params.mkString(",") + ": " + code + "]"

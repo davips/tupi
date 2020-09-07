@@ -66,7 +66,7 @@ class TypeSystem {
           val (funtype, _) = analyse(fn, env, nongen, debug)
           val (argtype, _) = analyse(arg, env, nongen, debug)
           val resulttype = newVar
-          unify(LambdaT(argtype, resulttype), funtype)
+          unify(LambdaT(argtype, resulttype), funtype)  // TODO: verify if we really need to pass some expr here for LambdaT
           resulttype
         case Lambda(arg, body) =>
           val argtype = newVar
@@ -141,8 +141,8 @@ class TypeSystem {
       case (LambdaT(froma, toa), LambdaT(fromb, tob)) =>
         unify(froma, fromb)
         unify(toa, tob)
-      case (l@LambdaT(froma, body), func) =>
-        throw new TypeError("Expected: " + l + ". Found: " + func + ")\n" + func + " cannot be applied to " + froma)
+      case (la@LambdaT(froma, body), func2:PrimitiveExprT) =>
+        throw new TypeError("Expected: " + la.expr + ". Found: " + func2.expr + ")\n" + func2 + " cannot be applied to " + froma)
       //      case (a, b) if a.toString == b.toString =>
       case (a, b) if a != b =>
         throw new TypeError("Type mismatch: " + a + "≠" + b)
