@@ -63,7 +63,7 @@ object Types {
 
   case class Var(id: Int) extends TypeSystem with ExprT {
     var instance: Option[ExprT] = None
-    lazy val name: String = nextUniqueName
+    lazy val name: String = id.toChar.toString
     lazy val scalaType: String = instance.get.scalaType
 
     override def toString: String = if (instance.isEmpty) name else instance.get.toString

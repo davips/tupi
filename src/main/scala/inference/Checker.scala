@@ -31,19 +31,11 @@ class ParseTypeError(msg: String) extends Exception(msg)
 class TypeSystem {
 
   type Env = Map[String, ExprT]
-  var _nextVarName = 'α';
-  var _nextVarId = 0
-
-  def nextUniqueName: String = {
-    val result = _nextVarName
-    _nextVarName = (_nextVarName.toInt + 1).toChar
-    result.toString
-  }
+  var varid: Int = 944
 
   def newVar: Var = {
-    val result = _nextVarId
-    _nextVarId += 1
-    Var(result)
+    varid += 1
+    Var(varid)
   }
 
   def analyse(ast: Expr, env: Env, print: Boolean = false): ExprT = analyse(ast, env, Set.empty, print)._1
@@ -92,7 +84,7 @@ class TypeSystem {
         case n: Num => NumT(n)
         case s: Str => StrT(s)
       }
-      if (debug) println("%-40s".format(ast.toString).take(42) + ": " + t)
+      if (debug) println("%-41s".format(ast.toString).take(40) + ": " + t)
       (t, newenv)
     }
   }
@@ -112,9 +104,9 @@ class TypeSystem {
     def freshrec(tp: ExprT): ExprT = {
       prune(tp) match {
         case v: Var =>
-          if (isgeneric(v, nongen))
+          if (isgeneric(v, nongen)) {
             mappings.getOrElseUpdate(v, newVar)
-          else {
+          } else {
             v
           }
         case LambdaT(from, to) => LambdaT(freshrec(from), freshrec(to))
