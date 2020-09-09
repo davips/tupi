@@ -84,6 +84,10 @@ class TypeSystem {
         case n: Num => NumT(n)
         case s: Str => StrT(s)
       }
+      ast match {
+        case lambda: Lambda => println("la", lambda.param.getClass)
+        case _ =>
+      }
       if (debug) println("%-41s".format(ast.toString).take(40) + ": " + t)
       (t, newenv)
     }
@@ -103,12 +107,7 @@ class TypeSystem {
 
     def freshrec(tp: ExprT): ExprT = {
       prune(tp) match {
-        case v: Var =>
-          if (isgeneric(v, nongen)) {
-            mappings.getOrElseUpdate(v, newVar)
-          } else {
-            v
-          }
+        case v: Var => if (isgeneric(v, nongen)) mappings.getOrElseUpdate(v, newVar) else v
         case LambdaT(from, to) => LambdaT(freshrec(from), freshrec(to))
         case EmptyT => EmptyT
         case pet: PrimitiveExprT => pet
@@ -181,7 +180,7 @@ object HM extends TypeSystem {
       analyse(ast, env, print = true)
     } catch {
       case t: Undefined =>
-        print("inference.Undefined symbol " + t.getMessage)
+        print("Type inference: undefined symbol " + t.getMessage)
         return false
       case t: TypeError =>
         print(t.getMessage)

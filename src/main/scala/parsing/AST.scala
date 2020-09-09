@@ -98,7 +98,7 @@ object AST {
 
   trait Ident extends Expr {
     val name: String
-    override val toString: String = name
+    override def toString: String = name
 
     def nested: Iterator[Expr] = Iterator.empty
   }
