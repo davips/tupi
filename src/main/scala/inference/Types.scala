@@ -32,22 +32,22 @@ object Types {
     }
   }
 
-  case class BoolT(expr: PrimitiveExpr = Native("boolen")) extends PrimitiveExprT {
+  case class BoolT(expr: PrimitiveExpr = NativeVal("boolen")) extends PrimitiveExprT {
     override val toString = "'boolean'"
     val scalaType: String = "Boolean"
   }
 
-  case class NumT(expr: PrimitiveExpr = Native("number")) extends PrimitiveExprT {
+  case class NumT(expr: PrimitiveExpr = NativeVal("number")) extends PrimitiveExprT {
     override val toString = "'number'"
     val scalaType: String = "Double"
   }
 
-  case class CharT(expr: PrimitiveExpr = Native("char")) extends PrimitiveExprT {
+  case class CharT(expr: PrimitiveExpr = NativeVal("char")) extends PrimitiveExprT {
     override val toString = "'char'"
     val scalaType: String = "Character"
   }
 
-  case class StrT(expr: PrimitiveExpr = Native("str")) extends PrimitiveExprT {
+  case class StrT(expr: PrimitiveExpr = NativeVal("str")) extends PrimitiveExprT {
     override val toString = "'str'"
     val scalaType: String = "String"
   }

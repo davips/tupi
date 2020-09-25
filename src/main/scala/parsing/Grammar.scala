@@ -18,7 +18,7 @@ object Grammar extends RegexParsers with ImplicitConversions with JavaTokenParse
   private lazy val iassign: P[Expr] = (newidentifier <~ "←") ~ (assign | lambda | math(true) | term(true)) ^^ Assign
   private lazy val lambda = ("{" ~> rep1(identifier) <~ ":") ~ (sequence(false) <~ "}") ^^ expandLambda
   private lazy val ilambda = ("{" ~> sequence(true) <~ "}") ^^ iexpandLambda
-  private lazy val scala = ("[" ~> rep((identifier <~ ":") ~ argtyp) ~ (str <~ ":") ~ (argtyp <~ "]")) ^^ expandScala
+  private lazy val scala = ("{" ~> rep((identifier <~ ":") ~ argtyp) ~ (str <~ ":") ~ (argtyp <~ "}")) ^^ expandScala
   private lazy val argtyp = "b" ^^^ BoolT() | "c" ^^^ CharT() | "s" ^^^ StrT() | "n" ^^^ NumT()
   private lazy val identifier = ("_" | ident) ^^ NamedIdent // vai conflitar com anonidentifier?
   private lazy val newidentifier = identifier | infixops

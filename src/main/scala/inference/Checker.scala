@@ -84,10 +84,6 @@ class TypeSystem {
         case n: Num => NumT(n)
         case s: Str => StrT(s)
       }
-      ast match {
-        case lambda: Lambda => println("la", lambda.param.getClass)
-        case _ =>
-      }
       if (debug) println("%-41s".format(ast.toString).take(40) + ": " + t)
       (t, newenv)
     }

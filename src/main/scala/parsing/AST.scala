@@ -33,7 +33,7 @@ object AST {
     }
   }
 
-  case class Native(typ: String) extends PrimitiveExpr {
+  case class NativeVal(typ: String) extends PrimitiveExpr {
     lazy val value = "'a native value'"
     override val toString: String = "'native " + typ + "'"
 

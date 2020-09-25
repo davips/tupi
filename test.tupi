@@ -1,12 +1,13 @@
+ff ← {a b c: c}
 ~ + e / viriam de uma lib:
-- ← [x:n y:n "x-y":n]
-* ← [x:n y:n "x*y":n]
-/ ← [x:n y:n "x/y":n]
-^ ← [x:n y:n "scala.math.pow(x,y)":n]
-
+- ← {x:n y:n "x-y":n}
++ ← {x:n y:n "x+y":n}
+* ← {x:n y:n "x*y":n}
+/ ← {x:n y:n "x/y":n}
+^ ← {x:n y:n "scala.math.pow(x,y)":n}
+[] ← {x l:
 ~ programa:
 x ←5
-d ← {x: z ← {_1 / (x ^ _2)}; z}
-d 2 4
-f←{a: {x*_1 / (x ^ _2)} 34; d}
-f 3 2 1
+d ← {_1}
+
+3 / 5
