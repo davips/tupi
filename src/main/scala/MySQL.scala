@@ -1,15 +1,11 @@
-import java.io.File
-import java.nio.{ByteBuffer, ByteOrder, DoubleBuffer}
-import java.sql.{Blob, Connection, DriverManager, Statement, Timestamp}
-import java.util.{Calendar, Random, UUID}
+import java.nio.{ByteBuffer, ByteOrder}
+import java.sql.{Connection, DriverManager}
 
 import breeze.linalg.DenseMatrix
-
-import scala.io.Source
 import org.json4s._
 import org.json4s.native.JsonParser
-//import org.json4s.jackson.JsonMethods._
 
+import scala.io.Source
 /**
  * Cada instancia desta classe representa uma conexao.
  */
