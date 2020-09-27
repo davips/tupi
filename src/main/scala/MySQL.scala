@@ -2,7 +2,6 @@ import java.nio.{ByteBuffer, ByteOrder}
 import java.sql.{Connection, DriverManager}
 
 import breeze.linalg.DenseMatrix
-import org.json4s._
 import org.json4s.native.JsonParser
 
 import scala.io.Source

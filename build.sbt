@@ -14,9 +14,7 @@ libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.21"
 
 libraryDependencies += "com.github.haifengl" %% "smile-scala" % "2.5.3" //ML stuff
 
-libraryDependencies += "io.spray" %%  "spray-json" % "1.3.5"
-
-libraryDependencies += "org.json4s" %% "json4s" % "3.2.11"
+libraryDependencies += "org.json4s" %% "json4s-native" % "3.6.9"
 
 libraryDependencies ++= Seq( //numeric stuff
   // Last stable release
