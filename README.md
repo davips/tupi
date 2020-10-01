@@ -16,3 +16,10 @@ n   32                      number
 "key"→value                 tuple
 
 
+# Remarks
+
+Based on
+
+2013 Functional language parser/interpreter https://github.com/davips/lamdheal-j
+
+
