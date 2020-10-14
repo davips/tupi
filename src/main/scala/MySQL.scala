@@ -142,7 +142,7 @@ object TestSQL extends App {
   val da = db.readData("select * from data")
   println(da)
   val did = da.head._4.split(",").head
-  val (n, id, m) = db.readDump(f"select * from dump where id='$did'").head
+  val (n, id, m) = db.readDump(f"select * from content where id='$did'").head
   print(m)
 
 }
