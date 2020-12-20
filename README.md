@@ -1,5 +1,6 @@
 # tupi
 Tupi - A lingua franca for computer science
+**This is an ongoing work, not ready for use right now.**
 
 ( ; ; )                     
 = /= >= <= > < + - * / ^    default left-associative infix identifier (binop) with conventional precedence
