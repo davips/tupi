@@ -105,7 +105,7 @@ object AST {
   }
 
   case class Assign(a: NamedIdent, b: Expr) extends Expr {
-    override val toString: String = a + "←" + b
+    override val toString: String = a + " ← " + b
 
     def nested: Iterator[Expr] = Iterator(a, b)
   }

@@ -12,8 +12,10 @@ b   ↓ ↑                     boolean
 c   't'                     char
 s   "text"                  string
 n   32                      number
-[1, 2, 3]                   list                          
+[]                          empty list is a value of type, e.g., [n]
+[1,2]                       syntax sugar for [] « 1 « 2
 "key"→value                 tuple
+·                           composition
 
 
 # Remarks

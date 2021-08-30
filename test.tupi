@@ -1,13 +1,22 @@
 ff ← {a b c: c}
+
 ~ + e / viriam de uma lib:
 - ← {x:n y:n "x-y":n}
 + ← {x:n y:n "x+y":n}
 * ← {x:n y:n "x*y":n}
 / ← {x:n y:n "x/y":n}
 ^ ← {x:n y:n "scala.math.pow(x,y)":n}
-[] ← {x l:
+
+_ação_2 ← {_1}
+
+f ← 4 + 8
+f
+¬
+
+[] ← {x l:}
+
 ~ programa:
 x ←5
 d ← {_1}
 
-3 / 5
+

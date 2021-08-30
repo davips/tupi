@@ -26,7 +26,7 @@ import scala.io.Source
 
 object Main extends App {
   val arq = Source.fromFile("test.tupi")
-  val txt = arq.getLines().mkString("\n")
+  val txt = arq.getLines().mkString("\n").takeWhile(_ != '¬').replace("²", "^2").replace("³", "^3")
   val txt2 = txt.replace("\n", ";\n").replace("(;\n", "(\n").replace(";\n)", "\n)").replace(";\n;", ";").replace(";;", ";").lines().filter(!_.startsWith("~")).toArray().toList.mkString //.lines().map(_.trim).toArray().toList.mkString("\n").replace("\n}", "ŋ}").replace("{\n", "ŋ{").replace(":\n", "ŋ:").replace("\n", ";\n").replace("ŋ:", ":\n").replace("ŋ{", "{\n").replace("ŋ}", "\n}")
   val txt3 = if (txt2.endsWith(";")) txt2.dropRight(1) else txt2
   val st = System.currentTimeMillis()

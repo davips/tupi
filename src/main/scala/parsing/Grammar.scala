@@ -1,27 +1,30 @@
-// Copyright (c) 2020. Davi Pereira dos Santos
-//     This file is part of the tupi project.
-//     Please respect the license. Removing authorship by any means
-//     (by code make up or closing the sources) or ignoring property rights
-//     is a crime and is unethical regarding the effort and time spent here.
-//     Relevant employers or funding agencies will be notified accordingly.
+// Copyright (c) 2021. Davi Pereira dos Santos
+// This file is part of the tupi project.
+// Please respect the license - more about this in the section (*) below.
 //
-//     tupi is free software: you can redistribute it and/or modify
-//     it under the terms of the GNU General Public License as published by
-//     the Free Software Foundation, either version 3 of the License, or
-//     (at your option) any later version.
+// tupi is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
-//     tupi is distributed in the hope that it will be useful,
-//     but WITHOUT ANY WARRANTY; without even the implied warranty of
-//     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//     GNU General Public License for more details.
+// tupi is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-//     You should have received a copy of the GNU General Public License
-//     along with tupi.  If not, see <http://www.gnu.org/licenses/>.
+// You should have received a copy of the GNU General Public License
+// along with tupi.  If not, see <http://www.gnu.org/licenses/>.
 //
+// (*) Removing authorship by any means, e.g. by distribution of derived
+// works or verbatim, obfuscated, compiled or rewritten versions of any
+// part of this work is illegal and it is unethical regarding the effort and
+// time spent here.
+//
+
 package parsing
 
 import inference.Types.{BoolT, CharT, NumT, StrT}
-import parsing.AST.{AnonIdentN, Appl, Expr, NamedIdent, Num, Str, _}
+import parsing.AST._
 
 import scala.util.parsing.combinator.{ImplicitConversions, JavaTokenParsers, RegexParsers}
 import scala.util.parsing.input.CharSequenceReader
@@ -32,15 +35,17 @@ object Grammar extends RegexParsers with ImplicitConversions with JavaTokenParse
   private lazy val sequence = (iargs: Boolean) => rep1sep(if (iargs) iexpr else prettyexpr, separator) ^^ Sequence
   private lazy val separator = ";" // not(":" ~ "\n") ~> "\n"
   private lazy val prettyexpr: P[Expr] = math(false) | expr
+
   private lazy val expr: P[Expr] = "(" ~> prettyexpr <~ ")" | scala | appl | assign | (lambda | ilambda) | term(false) | "{" ~> infixops <~ "}"
   private lazy val iexpr: P[Expr] = scala | iassign | lambda | math(true) | term(true) | "{" ~> infixops <~ "}"
+
   private lazy val assign: P[Expr] = (newidentifier <~ "←") ~ prettyexpr ^^ Assign
   private lazy val iassign: P[Expr] = (newidentifier <~ "←") ~ (assign | lambda | math(true) | term(true)) ^^ Assign
   private lazy val lambda = ("{" ~> rep1(identifier) <~ ":") ~ (sequence(false) <~ "}") ^^ expandLambda
   private lazy val ilambda = ("{" ~> sequence(true) <~ "}") ^^ iexpandLambda
   private lazy val scala = ("{" ~> rep((identifier <~ ":") ~ argtyp) ~ (str <~ ":") ~ (argtyp <~ "}")) ^^ expandScala
   private lazy val argtyp = "b" ^^^ BoolT() | "c" ^^^ CharT() | "s" ^^^ StrT() | "n" ^^^ NumT()
-  private lazy val identifier = ("_" | ident) ^^ NamedIdent // vai conflitar com anonidentifier?
+  private lazy val identifier = ident ^^ NamedIdent // vai conflitar com anonidentifier?
   private lazy val newidentifier = identifier | infixops
   private lazy val infixops = ("=" | "/=" | ">=" | "<=" | ">" | "<" | "+" | "-" | "*" | "/" | "^") ^^ NamedIdent
   private lazy val anonidentifier = """_[1-9]+""".r ^^ (idx => AnonIdentN(idx.tail.toInt)) | "_" ^^^ AnonIdent()
@@ -57,9 +62,10 @@ object Grammar extends RegexParsers with ImplicitConversions with JavaTokenParse
     if (iargs) "(" ~> rep1sep(iexpr, separator) <~ ")" ^^ Sequence | anonidentifier | identifier
     else "(" ~> rep1sep(prettyexpr, separator) <~ ")" ^^ Sequence | identifier
   } | literal // inverti anon com ident
-  private lazy val literal = num | str
+  private lazy val literal = num | str | bool
   private lazy val num = floatingPointNumber ^^ (n => Num(n.toDouble))
   private lazy val str = stringLiteral ^^ (str => Str(str.tail.dropRight(1)))
+  private lazy val bool = "↓".r ^^^ Bool(false) | "↑".r ^^^ Bool(true)
 
   private lazy val appl: P[Expr] = (appl ~ expr | func ~ expr) ^^ Appl
   private lazy val func: P[Expr] = lambda | ilambda | identifier | "{" ~> infixops <~ "}"

@@ -94,7 +94,7 @@ object Types {
   //  }
 
   case class LambdaT(from: ExprT, to: ExprT) extends ExprT {
-    override val toString = f"{$from→$to}"
+    override val toString = f"{$from → $to}"
     lazy val scalaType: String = f"$from => $to"
   }
 

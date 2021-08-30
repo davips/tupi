@@ -30,3 +30,5 @@ libraryDependencies ++= Seq( //numeric stuff
   // It depends on LGPL code
   "org.scalanlp" %% "breeze-viz" % "1.1"
 )
+
+libraryDependencies += "org.scalatest" %% "scalatest-funsuite" % "3.2.9" % "test"

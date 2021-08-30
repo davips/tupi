@@ -104,7 +104,7 @@ class TypeSystem {
         case n: Num => NumT(n)
         case s: Str => StrT(s)
       }
-      if (debug) println("%-41s".format(ast.toString).take(40) + ": " + t)
+      if (debug) println("%-41s".format(ast.toString).grouped(62).mkString(" ...\n  ... ") + ": " + t)
       (t, newenv)
     }
   }
@@ -173,7 +173,7 @@ class TypeSystem {
   }
 
   // Note: must be called with v 'pre-pruned'
-  def isgeneric(v: Var, nongen: Set[Var]): Boolean = !(occursin(v, nongen))
+  def isgeneric(v: Var, nongen: Set[Var]): Boolean = !occursin(v, nongen)
 
   // Note: must be called with v 'pre-pruned'
   def occursintype(v: Var, type2: ExprT): Boolean = {
