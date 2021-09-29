@@ -81,7 +81,7 @@ class TypeSystem {
     if (ast.t.isDefined) (ast.t.get, env) else {
       val t = ast match {
         case s: Scala => s.t.get
-        case id: Id => StrT(id.hosh)
+        case id: Id => NumT(id.hosh.n)
         case Sequence(items) => analyse_sequence(items.zip(LazyList.continually(None)), env, nongen, debug)
         case Ident(name) => gettype(name, env, nongen)
         case Appl(fn, arg) =>

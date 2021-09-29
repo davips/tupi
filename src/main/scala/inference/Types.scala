@@ -43,13 +43,13 @@ import parsing.AST._
 object Types {
 
   sealed trait ExprT {
-    val scalaType: String
+    val scalaTypeDescr: String
   }
 
   case object EmptyT extends ExprT {
     override def toString = "'ø'"
 
-    val scalaType: String = "Null"
+    val scalaTypeDescr: String = "Null"
   }
 
   trait PrimitiveExprT extends ExprT {
@@ -71,22 +71,22 @@ object Types {
 
   case class BoolT(expr: PrimitiveExpr = NativeVal("boolen")) extends PrimitiveExprT {
     override val toString = "'boolean'"
-    val scalaType: String = "Boolean"
+    val scalaTypeDescr: String = "Boolean"
   }
 
   case class NumT(expr: PrimitiveExpr = NativeVal("number")) extends PrimitiveExprT {
     override val toString = "'number'"
-    val scalaType: String = "Double"
+    val scalaTypeDescr: String = "Double"
   }
 
   case class CharT(expr: PrimitiveExpr = NativeVal("char")) extends PrimitiveExprT {
     override val toString = "'char'"
-    val scalaType: String = "Character"
+    val scalaTypeDescr: String = "Character"
   }
 
   case class StrT(expr: PrimitiveExpr = NativeVal("str")) extends PrimitiveExprT {
     override val toString = "'str'"
-    val scalaType: String = "String"
+    val scalaTypeDescr: String = "String"
   }
 
   //  case class ListT(elements_type: ExprT) extends ExprT {
@@ -95,13 +95,13 @@ object Types {
 
   case class LambdaT(from: ExprT, to: ExprT) extends ExprT {
     override val toString = f"{$from → $to}"
-    lazy val scalaType: String = f"$from => $to"
+    lazy val scalaTypeDescr: String = f"$from => $to"
   }
 
   case class Var(id: Int) extends TypeSystem with ExprT {
     var instance: Option[ExprT] = None
     lazy val name: String = id.toChar.toString
-    lazy val scalaType: String = instance.get.scalaType
+    lazy val scalaTypeDescr: String = instance.get.scalaTypeDescr
 
     override def toString: String = if (instance.isEmpty) name else instance.get.toString
   }

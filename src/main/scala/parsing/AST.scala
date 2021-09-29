@@ -19,11 +19,13 @@
 //     along with tupi.  If not, see <http://www.gnu.org/licenses/>.
 //
 package parsing
-import scala.tools.reflect.ToolBox
+
+import algebra.Hosh
 import inference.Types.EmptyT
 import runtime.LMap
 
 import scala.reflect.runtime.currentMirror
+import scala.tools.reflect.ToolBox
 
 object AST {
 
@@ -31,7 +33,7 @@ object AST {
 
   sealed trait Expr {
     var t: Option[ExprT] = None
-//    var hosh: Str
+    //    val hosh: Hosh
 
     def nested: Iterator[Expr]
   }
@@ -145,7 +147,7 @@ object AST {
 
   case class Id(expr: Expr) extends Expr {
     override val toString: String = "#(" + expr + ")"
-    val hosh: Str = Str("9873r981h23fd98h321f9832gf9873r981h23fdd")
+    val hosh: Hosh = Hosh("Id".map(_.toByte).toArray)
 
     def nested: Iterator[Expr] = Iterator.empty
   }
@@ -165,7 +167,7 @@ object AST {
     def func(args: List[Any]): PrimitiveExpr = {
       val toolbox = currentMirror.mkToolBox()
       val vars = params.zipWithIndex.map {
-        case (i@Ident(name), idx) => f"  val $name = args($idx).asInstanceOf[${i.t.get.scalaType}]\n"
+        case (i@Ident(name), idx) => f"  val $name = args($idx).asInstanceOf[${i.t.get.scalaTypeDescr}]\n"
       }
       //      println("111111111111111111111", code.value)
       val txt =
