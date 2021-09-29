@@ -36,7 +36,7 @@ object Grammar extends RegexParsers with ImplicitConversions with JavaTokenParse
   private lazy val separator = ";" // not(":" ~ "\n") ~> "\n"
   private lazy val prettyexpr: P[Expr] = math(false) | expr
 
-  private lazy val expr: P[Expr] = "(" ~> prettyexpr <~ ")" | scala | appl | assign | (lambda | ilambda) | term(false) | "{" ~> infixops <~ "}"
+  private lazy val expr: P[Expr] = "(" ~> prettyexpr <~ ")" | "#" ~> expr ^^ Id | scala | appl | assign | (lambda | ilambda) | term(false) | "{" ~> infixops <~ "}"
   private lazy val iexpr: P[Expr] = scala | iassign | lambda | math(true) | term(true) | "{" ~> infixops <~ "}"
 
   private lazy val assign: P[Expr] = (newidentifier <~ "←") ~ prettyexpr ^^ Assign
@@ -45,7 +45,7 @@ object Grammar extends RegexParsers with ImplicitConversions with JavaTokenParse
   private lazy val ilambda = ("{" ~> sequence(true) <~ "}") ^^ iexpandLambda
   private lazy val scala = ("{" ~> rep((identifier <~ ":") ~ argtyp) ~ (str <~ ":") ~ (argtyp <~ "}")) ^^ expandScala
   private lazy val argtyp = "b" ^^^ BoolT() | "c" ^^^ CharT() | "s" ^^^ StrT() | "n" ^^^ NumT()
-  private lazy val identifier = ident ^^ NamedIdent // vai conflitar com anonidentifier?
+  private lazy val identifier = not("_") ~> ident ^^ NamedIdent // vai conflitar com anonidentifier?
   private lazy val newidentifier = identifier | infixops
   private lazy val infixops = ("=" | "/=" | ">=" | "<=" | ">" | "<" | "+" | "-" | "*" | "/" | "^") ^^ NamedIdent
   private lazy val anonidentifier = """_[1-9]+""".r ^^ (idx => AnonIdentN(idx.tail.toInt)) | "_" ^^^ AnonIdent()

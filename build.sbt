@@ -16,6 +16,8 @@ libraryDependencies += "com.github.haifengl" %% "smile-scala" % "2.5.3" //ML stu
 
 libraryDependencies += "org.json4s" %% "json4s-native" % "3.6.9"
 
+libraryDependencies += "ky.korins" %% "blake3" % "2.9.0"
+
 libraryDependencies ++= Seq( //numeric stuff
   // Last stable release
   "org.scalanlp" %% "breeze" % "1.1",

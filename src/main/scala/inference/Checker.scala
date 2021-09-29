@@ -40,8 +40,6 @@ package inference
 import inference.Types._
 import parsing.AST._
 
-import scala.util.matching.Regex
-
 class Undefined(msg: String) extends Exception(msg)
 
 class TypeError(msg: String) extends Exception(msg)
@@ -58,6 +56,23 @@ class TypeSystem {
     Var(varid)
   }
 
+  def analyse_sequence(items: List[(Expr, Option[ExprT])], env: Env, nongen: Set[Var], debug: Boolean): ExprT = {
+    var newenv = env
+    val res = for ((expr, opt) <- items) yield {
+      if (opt.isDefined) expr -> opt
+      else try {
+        val (typ, env2) = analyse(expr, newenv, nongen, debug)
+        newenv = env2
+        expr -> Some(typ)
+      } catch {
+        case p: Undefined => expr -> None
+      }
+    }
+    if (res.last._2.isEmpty && res.flatMap(_._2).size > items.flatMap(_._2).size) {
+      analyse_sequence(res, newenv, nongen, debug)
+    } else res.last._2.get
+  }
+
   def analyse(ast: Expr, env: Env, print: Boolean = false): ExprT = analyse(ast, env, Set.empty, print)._1
 
   def analyse(ast: Expr, env: Env, nongen: Set[Var], debug: Boolean): (ExprT, Env) = {
@@ -66,13 +81,8 @@ class TypeSystem {
     if (ast.t.isDefined) (ast.t.get, env) else {
       val t = ast match {
         case s: Scala => s.t.get
-        case Sequence(items) =>
-          val types = for (it <- items) yield {
-            val (typ, env2) = analyse(it, newenv, nongen, debug)
-            newenv = env2
-            typ
-          }
-          types.last
+        case id: Id => StrT(id.hosh)
+        case Sequence(items) => analyse_sequence(items.zip(LazyList.continually(None)), env, nongen, debug)
         case Ident(name) => gettype(name, env, nongen)
         case Appl(fn, arg) =>
           val (funtype, _) = analyse(fn, env, nongen, debug)
@@ -89,16 +99,14 @@ class TypeSystem {
             val (etype, _) = analyse(e, env, nongen, debug)
             newenv += (id.name -> etype)
           } catch { //loop?
-            case p: Undefined =>
+            case p: Undefined if (p.getMessage == id.name) =>
               println(p.getMessage)
-              if (p.getMessage == id.name) {
-                println("Loop detectado!")
-                val newtype = newVar
-                newenv += (id.name -> newtype)
-                val (etype, _) = analyse(e, newenv, nongen + newtype, debug)
-                unify(newtype, etype)
-                analyse(e, newenv, nongen, debug)
-              } else throw p
+              println("Loop detected!")
+              val newtype = newVar
+              newenv += (id.name -> newtype)
+              val (etype, _) = analyse(e, newenv, nongen + newtype, debug)
+              unify(newtype, etype)
+              analyse(e, newenv, nongen, debug)
           }
           EmptyT
         case n: Num => NumT(n)
@@ -117,8 +125,9 @@ class TypeSystem {
   }
 
   def fresh(t: ExprT, nongen: Set[Var]): ExprT = {
-    import scala.collection.mutable
     import inference.Types.PrimitiveExprT
+
+    import scala.collection.mutable
     val mappings = new mutable.HashMap[Var, Var]
 
     def freshrec(tp: ExprT): ExprT = {

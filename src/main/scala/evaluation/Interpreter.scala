@@ -37,6 +37,7 @@ object Interpreter {
         }
         Empty() -> m.put(x.name, y)
       case Ident(name) => m(name) -> m
+      case id:Id => id.hosh -> m
       case Sequence(x :: List()) => ev(x, m)
       case Sequence((a@Assign(_, _)) :: xs) => ev(Sequence(xs), ev(a, m)._2)
       case Sequence(x :: xs) => ev(Sequence(xs), m) // TODO: tail call optimization

@@ -1,3 +1,10 @@
+~#3
+~+ ← {x:n y:n "x+y":n}
+a ← b
+b ← 3
+a
+¬
+
 ff ← {a b c: c}
 
 ~ + e / viriam de uma lib:
@@ -7,7 +14,7 @@ ff ← {a b c: c}
 / ← {x:n y:n "x/y":n}
 ^ ← {x:n y:n "scala.math.pow(x,y)":n}
 
-_ação_2 ← {_1}
+ação_2 ← {_1}
 
 f ← 4 + 8
 f

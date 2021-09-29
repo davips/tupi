@@ -19,13 +19,11 @@
 //     along with tupi.  If not, see <http://www.gnu.org/licenses/>.
 //
 package parsing
-
-import inference.Types
-import inference.Types.{EmptyT, LambdaT}
+import scala.tools.reflect.ToolBox
+import inference.Types.EmptyT
 import runtime.LMap
 
 import scala.reflect.runtime.currentMirror
-import scala.tools.reflect.ToolBox
 
 object AST {
 
@@ -33,6 +31,7 @@ object AST {
 
   sealed trait Expr {
     var t: Option[ExprT] = None
+//    var hosh: Str
 
     def nested: Iterator[Expr]
   }
@@ -118,6 +117,7 @@ object AST {
 
   trait Ident extends Expr {
     val name: String
+
     override def toString: String = name
 
     def nested: Iterator[Expr] = Iterator.empty
@@ -138,9 +138,16 @@ object AST {
   }
 
   case class Sequence(items: List[Expr]) extends Expr {
-    override val toString: String = "<" + items.mkString("; ") + ">"
+    override val toString: String = "(" + items.mkString("; ") + ")"
 
     def nested: Iterator[Expr] = items.iterator
+  }
+
+  case class Id(expr: Expr) extends Expr {
+    override val toString: String = "#(" + expr + ")"
+    val hosh: Str = Str("9873r981h23fd98h321f9832gf9873r981h23fdd")
+
+    def nested: Iterator[Expr] = Iterator.empty
   }
 
 

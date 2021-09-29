@@ -18,13 +18,18 @@
 //     You should have received a copy of the GNU General Public License
 //     along with tupi.  If not, see <http://www.gnu.org/licenses/>.
 //
+
 import evaluation.Interpreter
 import inference.HM
+import ky.korins.blake3.Blake3
 import parsing.Grammar
 
 import scala.io.Source
 
 object Main extends App {
+  val n = Blake3.bigInt("Some sring", 240)
+  println(n / 2)
+//  sys.exit()
   val arq = Source.fromFile("test.tupi")
   val txt = arq.getLines().mkString("\n").takeWhile(_ != '¬').replace("²", "^2").replace("³", "^3")
   val txt2 = txt.replace("\n", ";\n").replace("(;\n", "(\n").replace(";\n)", "\n)").replace(";\n;", ";").replace(";;", ";").lines().filter(!_.startsWith("~")).toArray().toList.mkString //.lines().map(_.trim).toArray().toList.mkString("\n").replace("\n}", "ŋ}").replace("{\n", "ŋ{").replace(":\n", "ŋ:").replace("\n", ";\n").replace("ŋ:", ":\n").replace("ŋ{", "{\n").replace("ŋ}", "\n}")
