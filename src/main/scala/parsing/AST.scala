@@ -29,16 +29,13 @@ import scala.tools.reflect.ToolBox
 
 object AST {
 
-  import inference.Types.{ExprT, PrimitiveExprT}
+  import inference.Types.ExprT
 
   sealed trait Expr {
-    var   t: Option[ExprT] = None
-//    val hosh: Hosh
-    lazy val hosh: Hosh = Hosh(toString.map(_.toByte).toArray)
-
+    var t: Option[ExprT] = None
+//    val hosh: Hosh       lazy val hosh: Hosh = Hosh(toString.map(_.toByte).toArray)
     def nested: Iterator[Expr]
   }
-
 
   sealed trait PrimitiveExpr extends Expr {
     val value: Any
@@ -46,83 +43,64 @@ object AST {
 
   object PrimitiveExpr {
     def unapply(expr: PrimitiveExpr): Option[Any] = Some(expr.value)
-
     def apply(value: Any): PrimitiveExpr = value match {
       case v: Boolean => Bool(v)
       case v: Double => Num(v)
       case v: Character => Char(v)
-      case v: String => Str(v)
+      case v: String => Text(v)
     }
-  }
-
-  case class NativeVal(typ: String) extends PrimitiveExpr {
-    lazy val value = "'a native value'"
-    override val toString: String = "'native " + typ + "'"
-
-    def nested: Iterator[Expr] = Iterator.empty
   }
 
   case class Empty() extends PrimitiveExpr {
     lazy val value: Empty = this
     override val toString = "ø"
     t = Some(EmptyT)
-
     def nested: Iterator[Expr] = Iterator.empty
   }
 
   case class Bool(value: java.lang.Boolean) extends PrimitiveExpr {
     override val toString: String = if (value) "↑" else "↓"
-
     def nested: Iterator[Expr] = Iterator.empty
   }
 
   case class Char(value: java.lang.Character) extends PrimitiveExpr {
     override val toString: String = value.toString
-
     def nested: Iterator[Expr] = Iterator.empty
   }
 
   case class Num(value: java.lang.Number) extends PrimitiveExpr {
     override val toString: String = value.toString
-
     def nested: Iterator[Expr] = Iterator.empty
   }
 
-  case class Str(value: String) extends PrimitiveExpr {
+  case class Text(value: String) extends PrimitiveExpr {
     override lazy val toString: String = value
-
     def nested: Iterator[Expr] = Iterator.empty
   }
 
   case class Func(value: Lambda, ctx: LMap[Expr]) extends PrimitiveExpr {
     override val toString: String = value.t.getOrElse("'undefined function type'").toString
-
     def nested: Iterator[Expr] = Iterator.empty //TODO: check this
   }
 
   case class Lambda(param: Ident, body: Sequence) extends Expr {
     override val toString: String = "{" + param + ": " + body + "}"
-
     def nested: Iterator[Expr] = body.nested
   }
 
   case class Assign(a: NamedIdent, b: Expr) extends Expr {
     override val toString: String = a + " ← " + b
-
     def nested: Iterator[Expr] = Iterator(a, b)
   }
 
   case class Appl(a: Expr, b: Expr) extends Expr {
     override val toString: String = a + "(" + b + ")"
-
     def nested: Iterator[Expr] = Iterator(a, b)
   }
 
   trait Ident extends Expr {
     val name: String
-
     override def toString: String = name
-
     def nested: Iterator[Expr] = Iterator.empty
   }
 
@@ -142,21 +120,18 @@ object AST {
 
   case class Sequence(items: List[Expr]) extends Expr {
     override val toString: String = "(" + items.mkString("; ") + ")"
-
     def nested: Iterator[Expr] = items.iterator
   }
 
   case class Id(expr: Expr) extends PrimitiveExpr {
-    val value = expr.hosh.n
-//    val hosh: Hosh = Hosh("Id".map(_.toByte).toArray) //* expr.hosh
+    val value = 123132//expr.hosh.n
+    //    val hosh: Hosh = Hosh("Id".map(_.toByte).toArray) //* expr.hosh
     override val toString: String = "#" + value
-
     def nested: Iterator[Expr] = Iterator.empty
   }
 
-  case class Scala(params: List[NamedIdent], code: Str) extends Expr {
+  case class Scala(params: List[NamedIdent], code: Text) extends Expr {
     override val toString: String = "«" + params.mkString(",") + ": " + code + "»"
-
     def func(args: List[Any]): PrimitiveExpr = {
       val toolbox = currentMirror.mkToolBox()
       val vars = params.zipWithIndex.map {
@@ -173,8 +148,6 @@ object AST {
       val evaluated = toolbox.eval(toolbox.parse(txt))
       PrimitiveExpr(evaluated)
     }
-
     def nested: Iterator[Expr] = Iterator.empty
   }
-
 }

@@ -12,7 +12,7 @@ x ← 3                       assignment (AltGr+y)
 {a:n b:n "a/b":n}           typed native code
 b   ↓ ↑                     boolean (AltGr+u, AltGr+Shift+u)
 c   't'                     char
-s   "text"                  string
+t   "some text"             text
 n   32                      number
 []                          empty list is a value of type, e.g., [n]
 [1,2]                       syntax sugar for [] « 1 « 2

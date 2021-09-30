@@ -110,7 +110,7 @@ class TypeSystem {
           }
           EmptyT
         case n: Num => NumT(n)
-        case s: Str => StrT(s)
+        case s: Text => TextT(s)
         case id: Id => NumT(id)
       }
       if (debug) println("%-41s".format(ast.toString).grouped(62).mkString(" ...\n  ... ") + ": " + t)

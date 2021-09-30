@@ -21,7 +21,6 @@
 
 import evaluation.Interpreter
 import inference.HM
-import ky.korins.blake3.Blake3
 import parsing.Grammar
 
 import scala.io.Source

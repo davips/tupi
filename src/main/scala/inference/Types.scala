@@ -37,7 +37,6 @@
 
 package inference
 
-import parsing.AST
 import parsing.AST._
 
 object Types {
@@ -53,39 +52,38 @@ object Types {
   }
 
   trait PrimitiveExprT extends ExprT {
-    val expr: PrimitiveExpr
-
+    val expr: Expr
     override def equals(obj: Any): Boolean = obj.getClass == this.getClass
   }
 
-//  object PrimitiveExprT {
-//    def unapply(exprt: PrimitiveExprT): Option[AST.PrimitiveExpr] = Some(exprt.expr)
-//
-//    def apply(expr: PrimitiveExpr): PrimitiveExprT = expr match {
-//      case Bool(_) => BoolT(expr)
-//      case Num(_) => NumT(expr)
-//      case Char(_) => CharT(expr)
-//      case Str(_) => StrT(expr)
-//    }
-//  }
+  //  object PrimitiveExprT {
+  //    def unapply(exprt: PrimitiveExprT): Option[AST.PrimitiveExpr] = Some(exprt.expr)
+  //
+  //    def apply(expr: PrimitiveExpr): PrimitiveExprT = expr match {
+  //      case Bool(_) => BoolT(expr)
+  //      case Num(_) => NumT(expr)
+  //      case Char(_) => CharT(expr)
+  //      case Str(_) => StrT(expr)
+  //    }
+  //  }
 
-  case class BoolT(expr: PrimitiveExpr = NativeVal("boolean")) extends PrimitiveExprT {
+  case class BoolT(expr: Expr) extends PrimitiveExprT {
     override val toString = "'boolean'"
     val scalaTypeDescr: String = "Boolean"
   }
 
-  case class NumT(expr: PrimitiveExpr = NativeVal("number")) extends PrimitiveExprT {
+  case class NumT(expr: Expr) extends PrimitiveExprT {
     override val toString = "'number'"
     val scalaTypeDescr: String = "Double"
   }
 
-  case class CharT(expr: PrimitiveExpr = NativeVal("char")) extends PrimitiveExprT {
+  case class CharT(expr: Expr) extends PrimitiveExprT {
     override val toString = "'char'"
     val scalaTypeDescr: String = "Character"
   }
 
-  case class StrT(expr: PrimitiveExpr = NativeVal("str")) extends PrimitiveExprT {
-    override val toString = "'str'"
+  case class TextT(expr: Expr) extends PrimitiveExprT {
+    override val toString = "'text'"
     val scalaTypeDescr: String = "String"
   }
 

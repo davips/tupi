@@ -23,7 +23,7 @@
 
 package parsing
 
-import inference.Types.{BoolT, CharT, NumT, StrT}
+import inference.Types.{BoolT, CharT, NumT, TextT}
 import parsing.AST._
 
 import scala.util.parsing.combinator.{ImplicitConversions, JavaTokenParsers, RegexParsers}
@@ -43,10 +43,9 @@ object Grammar extends RegexParsers with ImplicitConversions with JavaTokenParse
   private lazy val iassign: P[Expr] = (newidentifier <~ "←") ~ (assign | lambda | math(true) | term(true)) ^^ Assign
   private lazy val lambda = ("{" ~> rep1(identifier) <~ ":") ~ (sequence(false) <~ "}") ^^ expandLambda
   private lazy val ilambda = ("{" ~> sequence(true) <~ "}") ^^ iexpandLambda
-//  private lazy val scala = ("{" ~> rep((identifier <~ ":") ~ argtyp) ~ (str <~ ":") ~ (argtyp <~ "}")) ^^ expandScala
-  private lazy val scala = ("{" ~> rep(typedIdent) ~ (str <~ ":") ~ (argtyp <~ "}")) ^^ expandScala
-  private lazy val typedIdent = (identifier <~ ":") ~ argtyp
-  private lazy val argtyp = "b" ^^^ BoolT() | "c" ^^^ CharT() | "s" ^^^ StrT() | "n" ^^^ NumT()
+  private lazy val scala = ("{" ~> rep(typedIdent) ~ (str <~ ":") ~ (argType <~ "}")) ^^ expandScala
+  private lazy val typedIdent = (identifier <~ ":") ~ argType ^^ buildTypedIdent
+  private lazy val argType = "b"  | "c"  | "t"  | "n"
   private lazy val identifier = not("_") ~> ident ^^ NamedIdent
   private lazy val newidentifier = identifier | infixops
   private lazy val infixops = ("=" | "/=" | ">=" | "<=" | ">" | "<" | "+" | "-" | "*" | "/" | "^") ^^ NamedIdent
@@ -66,7 +65,7 @@ object Grammar extends RegexParsers with ImplicitConversions with JavaTokenParse
   } | literal // inverti anon com ident
   private lazy val literal = num | str | bool
   private lazy val num = floatingPointNumber ^^ (n => Num(n.toDouble))
-  private lazy val str = stringLiteral ^^ (str => Str(str.tail.dropRight(1)))
+  private lazy val str = stringLiteral ^^ (str => Text(str.tail.dropRight(1)))
   private lazy val bool = "↓".r ^^^ Bool(false) | "↑".r ^^^ Bool(true)
 
   private lazy val appl: P[Expr] = (appl ~ expr | func ~ expr) ^^ Appl
