@@ -80,8 +80,8 @@ class TypeSystem {
     var newenv = env
     if (ast.t.isDefined) (ast.t.get, env) else {
       val t = ast match {
-        case s: Scala => s.t.get
-        case id: Id => NumT(id.hosh.n)
+//        case s: Scala =>
+//          s.t.get
         case Sequence(items) => analyse_sequence(items.zip(LazyList.continually(None)), env, nongen, debug)
         case Ident(name) => gettype(name, env, nongen)
         case Appl(fn, arg) =>
@@ -111,6 +111,7 @@ class TypeSystem {
           EmptyT
         case n: Num => NumT(n)
         case s: Str => StrT(s)
+        case id: Id => NumT(id)
       }
       if (debug) println("%-41s".format(ast.toString).grouped(62).mkString(" ...\n  ... ") + ": " + t)
       (t, newenv)

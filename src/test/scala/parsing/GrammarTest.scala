@@ -36,7 +36,7 @@ class GrammarTest extends org.scalatest.funsuite.AnyFunSuite {
     "(x;y)" -> Sequence(List(NamedIdent("x"), NamedIdent("y"))),
     "{_}" -> Lambda(AnonIdent(), Sequence(List(AnonIdent()))),
     "{_1; _2}" -> Lambda(AnonIdentN(1), Sequence(List(Lambda(AnonIdentN(2), Sequence(List(AnonIdentN(1), AnonIdentN(2))))))),
-    "{a:n \"a+a\":n}" -> Lambda(NamedIdent("a"), Sequence(List(Scala(List(NamedIdent("a")), Str("a+a"), NumT()))))
+    "{a:n \"a+a\":n}" -> Lambda(NamedIdent("a"), Sequence(List(Scala(List(NamedIdent("a")), Str("a+a")))))
   ) foreach {
     case (text, ast) => test(text) {
       assert(Grammar.parse(text).get.items.head == ast)

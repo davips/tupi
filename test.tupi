@@ -1,15 +1,19 @@
-~#3
-~+ ← {x:n y:n "x+y":n}
-a ← b
+{x:n y:n "x+y":n}
+¬
+#3
+
+p ← {x:n y:n "x+y":n}
++ ← p
+a ← b + 5
 b ← 3
 a
-¬
+p
 
 ff ← {a b c: c}
 
 ~ + e / viriam de uma lib:
 - ← {x:n y:n "x-y":n}
-+ ← {x:n y:n "x+y":n}
+~+ ← {x:n y:n "x+y":n}
 * ← {x:n y:n "x*y":n}
 / ← {x:n y:n "x/y":n}
 ^ ← {x:n y:n "scala.math.pow(x,y)":n}
@@ -18,9 +22,8 @@ ação_2 ← {_1}
 
 f ← 4 + 8
 f
-¬
 
-[] ← {x l:}
+~ [] ← {x l:}
 
 ~ programa:
 x ←5

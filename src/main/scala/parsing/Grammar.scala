@@ -43,9 +43,11 @@ object Grammar extends RegexParsers with ImplicitConversions with JavaTokenParse
   private lazy val iassign: P[Expr] = (newidentifier <~ "←") ~ (assign | lambda | math(true) | term(true)) ^^ Assign
   private lazy val lambda = ("{" ~> rep1(identifier) <~ ":") ~ (sequence(false) <~ "}") ^^ expandLambda
   private lazy val ilambda = ("{" ~> sequence(true) <~ "}") ^^ iexpandLambda
-  private lazy val scala = ("{" ~> rep((identifier <~ ":") ~ argtyp) ~ (str <~ ":") ~ (argtyp <~ "}")) ^^ expandScala
+//  private lazy val scala = ("{" ~> rep((identifier <~ ":") ~ argtyp) ~ (str <~ ":") ~ (argtyp <~ "}")) ^^ expandScala
+  private lazy val scala = ("{" ~> rep(typedIdent) ~ (str <~ ":") ~ (argtyp <~ "}")) ^^ expandScala
+  private lazy val typedIdent = (identifier <~ ":") ~ argtyp
   private lazy val argtyp = "b" ^^^ BoolT() | "c" ^^^ CharT() | "s" ^^^ StrT() | "n" ^^^ NumT()
-  private lazy val identifier = not("_") ~> ident ^^ NamedIdent // vai conflitar com anonidentifier?
+  private lazy val identifier = not("_") ~> ident ^^ NamedIdent
   private lazy val newidentifier = identifier | infixops
   private lazy val infixops = ("=" | "/=" | ">=" | "<=" | ">" | "<" | "+" | "-" | "*" | "/" | "^") ^^ NamedIdent
   private lazy val anonidentifier = """_[1-9]+""".r ^^ (idx => AnonIdentN(idx.tail.toInt)) | "_" ^^^ AnonIdent()

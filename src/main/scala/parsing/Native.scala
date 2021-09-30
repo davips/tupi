@@ -27,10 +27,10 @@ import scala.util.parsing.combinator.PackratParsers
 
 trait Native extends PackratParsers {
 
-  def expandScala(l: List[(NamedIdent ~ PrimitiveExprT)], code: Str, r: PrimitiveExprT): Lambda = {
+  def expandScala(l: List[(NamedIdent ~ PrimitiveExprT)], code: Str, resultType: PrimitiveExprT): Lambda = {
     val args = l.map { case id ~ t => id.t = Some(t); id }
-    var newbody = Sequence(List(Scala(args, code, r)))
-    var res: ExprT = r
+    var newbody = Sequence(List(Scala(args, code)))
+    var res: ExprT = resultType
     for (arg <- args.tail.reverse) {
       val la = Lambda(arg, newbody)
       la.t = Some(LambdaT(arg.t.get, res))

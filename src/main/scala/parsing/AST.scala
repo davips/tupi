@@ -32,8 +32,9 @@ object AST {
   import inference.Types.{ExprT, PrimitiveExprT}
 
   sealed trait Expr {
-    var t: Option[ExprT] = None
-    //    val hosh: Hosh
+    var   t: Option[ExprT] = None
+//    val hosh: Hosh
+    lazy val hosh: Hosh = Hosh(toString.map(_.toByte).toArray)
 
     def nested: Iterator[Expr]
   }
@@ -145,24 +146,16 @@ object AST {
     def nested: Iterator[Expr] = items.iterator
   }
 
-  case class Id(expr: Expr) extends Expr {
-    override val toString: String = "#(" + expr + ")"
-    val hosh: Hosh = Hosh("Id".map(_.toByte).toArray)
+  case class Id(expr: Expr) extends PrimitiveExpr {
+    val value = expr.hosh.n
+//    val hosh: Hosh = Hosh("Id".map(_.toByte).toArray) //* expr.hosh
+    override val toString: String = "#" + value
 
     def nested: Iterator[Expr] = Iterator.empty
   }
 
-
-  //  case class Closure(body: Expr, context: LMap[Expr]) extends Expr {
-  //    override val toString: String = "(" + body + ": " + context.m.keys + ")"
-  //
-  //    def nested: Iterator[Expr] = Iterator.empty
-  //  }
-
-  case class Scala(params: List[NamedIdent], code: Str, typ: PrimitiveExprT) extends Expr {
-    override val toString: String = "[" + params.mkString(",") + ": " + code + "]"
-    //    private val types = typ +: params.map(_.t).reverse
-    //    t = Some(typ) //types.reduce((to, from) => LambdaT(from, to))
+  case class Scala(params: List[NamedIdent], code: Str) extends Expr {
+    override val toString: String = "«" + params.mkString(",") + ": " + code + "»"
 
     def func(args: List[Any]): PrimitiveExpr = {
       val toolbox = currentMirror.mkToolBox()
