@@ -1,32 +1,33 @@
-{x:n y:n "x+y":n}
+f ← {y:
+        + ← {x:n y:n "x+y":n}
+        {+} y
+}
+#f
+
 ¬
-#3
 
-p ← {x:n y:n "x+y":n}
-+ ← p
-a ← b + 5
-b ← 3
-a
-p
+f ← (
+    a ← b + 5
+~ a recebe de expr;       b recebe lazily de AST.m
+    b ← 3
+    a
+    ff ← {a b c: c}
+~ a,b,c tem hosh proprio            c tem próprio
+    - ← {x:n y:n "x-y":n}
+    + ← {x:n y:n "x+y":n}
+    * ← {x:n y:n "x*y":n}
+    / ← {x:n y:n "x/y":n}
+    ^ ← {x:n y:n "scala.math.pow(x,y)":n}
+    ação_2 ← {_1}
+    g ← 4 + 8
+    g
 
-ff ← {a b c: c}
 
-~ + e / viriam de uma lib:
-- ← {x:n y:n "x-y":n}
-~+ ← {x:n y:n "x+y":n}
-* ← {x:n y:n "x*y":n}
-/ ← {x:n y:n "x/y":n}
-^ ← {x:n y:n "scala.math.pow(x,y)":n}
+    x ←5
+    d ← {_1}
+)
 
-ação_2 ← {_1}
 
-f ← 4 + 8
-f
+~ f recebe do runtime.m
 
 ~ [] ← {x l:}
-
-~ programa:
-x ←5
-d ← {_1}
-
-

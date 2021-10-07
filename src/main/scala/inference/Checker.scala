@@ -68,8 +68,13 @@ class TypeSystem {
         case p: Undefined => expr -> None
       }
     }
-    if (res.last._2.isEmpty && res.flatMap(_._2).size > items.flatMap(_._2).size) {
-      analyse_sequence(res, newenv, nongen, debug)
+    if (res.last._2.isEmpty) {
+      if (res.flatMap(_._2).size > items.flatMap(_._2).size)
+        analyse_sequence(res, newenv, nongen, debug)
+      else {
+        analyse(res.last._1, newenv, nongen, debug)
+        throw new Undefined("Exception not thrown for " + res.last._1)
+      }
     } else res.last._2.get
   }
 
@@ -80,10 +85,12 @@ class TypeSystem {
     var newenv = env
     if (ast.t.isDefined) (ast.t.get, env) else {
       val t = ast match {
-//        case s: Scala =>
-//          s.t.get
+        //        case s: Scala =>
+        //          s.t.get
         case Sequence(items) => analyse_sequence(items.zip(LazyList.continually(None)), env, nongen, debug)
         case Ident(name) => gettype(name, env, nongen)
+        case id@Id() =>
+          LambdaT(AnyT(id), TextT(id))  // TODO está correto passar id como expr?
         case Appl(fn, arg) =>
           val (funtype, _) = analyse(fn, env, nongen, debug)
           val (argtype, _) = analyse(arg, env, nongen, debug)
@@ -110,8 +117,7 @@ class TypeSystem {
           }
           EmptyT
         case n: Num => NumT(n)
-        case s: Text => TextT(s)
-        case id: Id => NumT(id)
+        case t: Text => TextT(t)
       }
       if (debug) println("%-41s".format(ast.toString).grouped(62).mkString(" ...\n  ... ") + ": " + t)
       (t, newenv)
@@ -149,6 +155,7 @@ class TypeSystem {
     val type2 = prune(t2)
     //    println("ty1: " + type1 + " ty2:" + type2)
     (type1, type2) match {
+      case (_, AnyT(_)) | (AnyT(_), _) =>
       case (a: Var, b) => if (a != b) {
         if (occursintype(a, b))
           throw new TypeError("recursive unification")
@@ -159,14 +166,14 @@ class TypeSystem {
         unify(froma, fromb)
         unify(toa, tob)
       case (la@LambdaT(froma, body), func2: PrimitiveExprT) =>
-        val fst -> snd = if (reverse) la -> func2.expr else func2.expr -> la
-        throw new TypeError("Expected: " + fst + ". Found: " + snd + ")\n" + func2 + " cannot be applied to " + froma)
-      //      case (a, b) if a.toString == b.toString =>
+        val exp = func2.expr.t.get
+        if (reverse) throw new TypeError("Expected:\t" + la + "\nFound:  \t" + exp)
+        else throw new TypeError("Expected:\t" + exp + "\nFound:  \t" + la)
       case (a, b: PrimitiveExprT) if a != b =>
-        throw new TypeError(f"Type mismatch: $a ≠ ${b.expr}!  Types differ... $a ≠ $b!")
+        throw new TypeError(f"Type mismatch: ${b.expr} should be a $b not a $a.")
       case (a: PrimitiveExprT, b) if a != b =>
-        throw new TypeError(f"Type mismatch: ${a.expr} ≠ $b!  Types differ... $a ≠ $b!")
-      case (a, b) if a != b => throw new TypeError("Type mismatch: " + a + "≠" + b)
+        throw new TypeError(f"Type mismatch: ${a.expr} should be a $a not a $b.")
+      case (a, b) if a != b => throw new TypeError("Type mismatch: " + a + " ≠ " + b)
       case (a, b) =>
     }
   }

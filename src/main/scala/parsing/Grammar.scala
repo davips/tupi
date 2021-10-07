@@ -23,7 +23,6 @@
 
 package parsing
 
-import inference.Types.{BoolT, CharT, NumT, TextT}
 import parsing.AST._
 
 import scala.util.parsing.combinator.{ImplicitConversions, JavaTokenParsers, RegexParsers}
@@ -36,7 +35,7 @@ object Grammar extends RegexParsers with ImplicitConversions with JavaTokenParse
   private lazy val separator = ";" // not(":" ~ "\n") ~> "\n"
   private lazy val prettyexpr: P[Expr] = math(false) | expr
 
-  private lazy val expr: P[Expr] = "(" ~> prettyexpr <~ ")" | "#" ~> expr ^^ Id | scala | appl | assign | (lambda | ilambda) | term(false) | "{" ~> infixops <~ "}"
+  private lazy val expr: P[Expr] = "(" ~> sequence(false) <~ ")" | scala | appl | assign | (lambda | ilambda) | term(false) | "{" ~> infixops <~ "}"
   private lazy val iexpr: P[Expr] = scala | iassign | lambda | math(true) | term(true) | "{" ~> infixops <~ "}"
 
   private lazy val assign: P[Expr] = (newidentifier <~ "←") ~ prettyexpr ^^ Assign
@@ -45,7 +44,7 @@ object Grammar extends RegexParsers with ImplicitConversions with JavaTokenParse
   private lazy val ilambda = ("{" ~> sequence(true) <~ "}") ^^ iexpandLambda
   private lazy val scala = ("{" ~> rep(typedIdent) ~ (str <~ ":") ~ (argType <~ "}")) ^^ expandScala
   private lazy val typedIdent = (identifier <~ ":") ~ argType ^^ buildTypedIdent
-  private lazy val argType = "b"  | "c"  | "t"  | "n"
+  private lazy val argType = "b" | "c" | "t" | "n"
   private lazy val identifier = not("_") ~> ident ^^ NamedIdent
   private lazy val newidentifier = identifier | infixops
   private lazy val infixops = ("=" | "/=" | ">=" | "<=" | ">" | "<" | "+" | "-" | "*" | "/" | "^") ^^ NamedIdent
@@ -60,16 +59,16 @@ object Grammar extends RegexParsers with ImplicitConversions with JavaTokenParse
   private lazy val curry = (op: String) => op ^^^ ((a: Expr, b: Expr) => Appl(Appl(NamedIdent(op), a), b))
 
   private lazy val term = (iargs: Boolean) => {
-    if (iargs) "(" ~> rep1sep(iexpr, separator) <~ ")" ^^ Sequence | anonidentifier | identifier
+    if (iargs) "(" ~> rep1sep(iexpr, separator) <~ ")" ^^ Sequence | anonidentifier | identifier // inverti anon com ident
     else "(" ~> rep1sep(prettyexpr, separator) <~ ")" ^^ Sequence | identifier
-  } | literal // inverti anon com ident
+  } | literal | func
   private lazy val literal = num | str | bool
   private lazy val num = floatingPointNumber ^^ (n => Num(n.toDouble))
   private lazy val str = stringLiteral ^^ (str => Text(str.tail.dropRight(1)))
   private lazy val bool = "↓".r ^^^ Bool(false) | "↑".r ^^^ Bool(true)
 
-  private lazy val appl: P[Expr] = (appl ~ expr | func ~ expr) ^^ Appl
-  private lazy val func: P[Expr] = lambda | ilambda | identifier | "{" ~> infixops <~ "}"
+  private lazy val appl: P[Expr] = (appl ~ expr | func ~ expr | func ~ func) ^^ Appl
+  private lazy val func: P[Expr] = lambda | ilambda | identifier | "{" ~> infixops <~ "}" | "#" ^^^ Id()
 
   def parse(txt: String): ParseResult[Sequence] = parseAll(phrase(program), new PackratReader(new CharSequenceReader(txt)))
 }

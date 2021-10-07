@@ -91,6 +91,11 @@ object Types {
   //    override def toString: String = "'list of " + elements_type + "'"
   //  }
 
+  case class AnyT(expr: Expr) extends PrimitiveExprT {
+    override val toString = f"'any'"
+    override val scalaTypeDescr: String = "Any"
+  }
+
   case class LambdaT(from: ExprT, to: ExprT) extends ExprT {
     override val toString = f"{$from → $to}"
     lazy val scalaTypeDescr: String = f"$from => $to"
