@@ -1,5 +1,11 @@
-# Tupi Unique Program Identification
-Tupi - A lingua franca for computer science
+# Tupi Unique Program Identification - A lingua franca de novo
+This motto is a wordplay meaning "A link language from the beginning" if read as an English sentence,
+but also "The link language is back" if read as written in Portuguese.
+None of these meanings are particularly true, as the _tupi_ programming language doesn't represent the Tupi language(s) in any way,
+and the effort needed for a language to become seriously used by third parties requires time, money and people, something that simply won't happen.
+However, the pun - and the fun of language design - are still worth it.
+
+
 
 **This is an ongoing work, not ready for use right now.**
 ```
