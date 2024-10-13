@@ -20,7 +20,7 @@
 //
 package parsing
 
-import algebra.Hosh
+//import algebra.Hosh
 import inference.Types.EmptyT
 import runtime.LMap
 
@@ -35,13 +35,13 @@ object AST {
 
   sealed trait Expr {
     var t: Option[ExprT] = None
-    val hosh: Option[Hosh]
+    //val hosh: Option[Hosh]
     def nested: Iterator[Expr]
   }
 
   sealed trait PrimitiveExpr extends Expr {
     val value: Any
-    lazy val hosh: Option[Hosh] = Some(Hosh(getClass.toString.map(_.toByte).toArray) * Hosh(toString.map(_.toByte).toArray))
+    //lazy val hosh: Option[Hosh] = Some(Hosh(getClass.toString.map(_.toByte).toArray) * Hosh(toString.map(_.toByte).toArray))
   }
 
   object PrimitiveExpr {
@@ -83,31 +83,31 @@ object AST {
 
   case class Closure(value: Lambda, ctx: LMap[Expr]) extends PrimitiveExpr {
     override val toString: String = value.t.getOrElse("'undefined function type'").toString
-    override lazy val hosh: Option[Hosh] = ??? // it probably makes no sense to have a hosh here
+    //override lazy val hosh: Option[Hosh] = ??? // it probably makes no sense to have a hosh here
     def nested: Iterator[Expr] = Iterator.empty //TODO: check this
   }
 
   case class Lambda(param: Ident, body: Sequence) extends Expr {
-    lazy val paramHosh: Hosh = Hosh(param.name.map(_.toByte).toArray)
+    //lazy val paramHosh: Hosh = Hosh(param.name.map(_.toByte).toArray)
     override val toString: String = "{" + param + ": " + body + "}"
-    lazy val hosh: Option[Hosh] = Some(Hosh(getClass.toString.map(_.toByte).toArray) * paramHosh * body.hosh.get)
+    //lazy val hosh: Option[Hosh] = Some(Hosh(getClass.toString.map(_.toByte).toArray) * paramHosh * body.hosh.get)
     def nested: Iterator[Expr] = body.nested
   }
 
   case class Assign(a: NamedIdent, b: Expr) extends Expr {
     m = m.put(a.name, b)
     override val toString: String = a + " ← " + b
-    lazy val hosh: Option[Hosh] = Some(Hosh(getClass.toString.map(_.toByte).toArray) * a.hosh.get * b.hosh.get)
+    //lazy val hosh: Option[Hosh] = Some(Hosh(getClass.toString.map(_.toByte).toArray) * a.hosh.get * b.hosh.get)
     def nested: Iterator[Expr] = Iterator(a, b)
   }
 
   case class Appl(a: Expr, b: Expr) extends Expr {
     override val toString: String = a + "(" + b + ")"
-    lazy val hosh: Option[Hosh] = (Some(
-      Hosh(getClass.toString.map(_.toByte).toArray) *
-        a.hosh.get *
-        b.hosh.get
-    ))
+//     lazy val hosh: Option[Hosh] = (Some(
+//       Hosh(getClass.toString.map(_.toByte).toArray) *
+//         a.hosh.get *
+//         b.hosh.get
+//     ))
     def nested: Iterator[Expr] = Iterator(a, b)
   }
 
@@ -118,10 +118,10 @@ object AST {
       m.get(name)
     }
     override def toString: String = name
-    lazy val hosh: Option[Hosh] = expr match {
-      case Some(expr) => expr.hosh
-      case None => None
-    }
+//     lazy val hosh: Option[Hosh] = expr match {
+//       case Some(expr) => expr.hosh
+//       case None => None
+//     }
     def nested: Iterator[Expr] = Iterator.empty
   }
 
@@ -141,20 +141,20 @@ object AST {
 
   case class Sequence(items: List[Expr]) extends Expr {
     override val toString: String = "(" + items.mkString("; ") + ")"
-    lazy val hosh: Option[Hosh] = if (items.size == 1) items.head.hosh else Some(items.dropRight(1).map(_.hosh.get).sortBy(_.n).reduce(_ * _) * items.last.hosh.get)
+    //lazy val hosh: Option[Hosh] = if (items.size == 1) items.head.hosh else Some(items.dropRight(1).map(_.hosh.get).sortBy(_.n).reduce(_ * _) * items.last.hosh.get)
     def nested: Iterator[Expr] = items.iterator
   }
 
   case class Id() extends Expr {
     override val toString: String = "#"
-    lazy val hosh: Option[Hosh] = Some(Hosh(getClass.toString.map(_.toByte).toArray))
+    //lazy val hosh: Option[Hosh] = Some(Hosh(getClass.toString.map(_.toByte).toArray))
     def nested: Iterator[Expr] = Iterator.empty
   }
 
   case class Scala(params: List[NamedIdent], code: Text) extends Expr {
-    val paramsHosh: Hosh = params.map(param => Hosh(param.name.map(_.toByte).toArray)).reduce(_ * _)
+    //val paramsHosh: Hosh = params.map(param => Hosh(param.name.map(_.toByte).toArray)).reduce(_ * _)
     override val toString: String = "«" + params.mkString(",") + ": " + code + "»"
-    lazy val hosh: Option[Hosh] = Some(Hosh(getClass.toString.map(_.toByte).toArray) * paramsHosh * code.hosh.get)
+    //lazy val hosh: Option[Hosh] = Some(Hosh(getClass.toString.map(_.toByte).toArray) * paramsHosh * code.hosh.get)
     def func(args: List[Any]): PrimitiveExpr = {
       val toolbox = currentMirror.mkToolBox()
       val vars = params.zipWithIndex.map {

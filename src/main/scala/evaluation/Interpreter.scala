@@ -37,8 +37,10 @@ object Interpreter {
       case Sequence(x :: List()) => ev(x, m)
       case Sequence((a@Assign(_, _)) :: xs) => ev(Sequence(xs), ev(a, m)._2)
       case Sequence(x :: xs) => ev(Sequence(xs), m) // TODO: tail call optimization
-      case Appl(Id(), Ident(name)) =>  Text(m(name).hosh.get.id) -> m
-      case Appl(Id(), e) =>  Text(e.hosh.get.id) -> m
+      case Appl(Id(), Ident(name)) =>  Text("##hosh##") -> m
+      case Appl(Id(), e) =>  Text("##hosh##") -> m
+//       case Appl(Id(), Ident(name)) =>  Text(m(name).hosh.get.id) -> m
+//       case Appl(Id(), e) =>  Text(e.hosh.get.id) -> m
       case Appl(f, x) => ev(f, m)._1 -> ev(x, m)._1 match {
         case Closure(Lambda(param, body), ctx) -> xev => ev(body, ctx.put(param.name, xev))
       }
